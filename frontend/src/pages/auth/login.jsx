@@ -44,7 +44,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="w-full max-w-[390px] bg-white border border-gray-300 rounded-[10px] p-8 sm:p-9 shadow-sm">
+      <div className="w-full max-w-[390px] bg-white border border-gray-100 rounded-[10px] p-8 sm:p-9 shadow-lg">
         {/* Brand Header */}
         <div className="text-center mb-6">
           <h1 className="font-extrabold text-[26px] tracking-[-0.6px] text-black leading-tight mb-1">

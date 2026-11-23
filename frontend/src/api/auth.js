@@ -24,7 +24,7 @@ export const authApi = {
     } catch (error) {
       const message =
         error.response?.data?.message ||
-        'Login failed. Please check your credentials and try again.';
+        'Login failed.';
 
       return { success: false, message };
     }
