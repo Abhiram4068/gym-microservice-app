@@ -12,18 +12,20 @@ const ViewOwners = lazy(() => import('../pages/superadmin/ViewOwners'));
 
 const AppRoutes = () => {
   return (
-    <Suspense fallback={<div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
 
-        {/* SuperAdmin Protected Routes */}
+        {/* SuperAdmin / Admin Protected Routes */}
         <Route element={<SuperAdminRoute />}>
           <Route element={<SuperAdminLayout />}>
-            <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
-            <Route path="/superadmin/dashboard" element={<Dashboard />} />
-            <Route path="/superadmin/owners" element={<ViewOwners />} />
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+            <Route path="/admin/owners" element={<ViewOwners />} />
+            <Route path="/superadmin/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/superadmin/owners" element={<Navigate to="/admin/owners" replace />} />
           </Route>
         </Route>
 
