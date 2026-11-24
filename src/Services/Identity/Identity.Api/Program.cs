@@ -69,6 +69,7 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IGymRegistrationService, GymRegistrationService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IGymOwnerService, GymOwnerService>();
 
 // Configure CORS for Frontend

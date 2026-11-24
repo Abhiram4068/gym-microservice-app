@@ -7,7 +7,7 @@ const SuperAdminRoute = () => {
 
   if (!isAuthenticated()) {
     // Preserve attempted destination
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/superadmin/login" state={{ from: location }} replace />;
   }
 
   const role = getUserRole();
@@ -21,7 +21,7 @@ const SuperAdminRoute = () => {
   if (role === UserRole.Receptionist) return <Navigate to="/receptionist/dashboard" replace />;
   if (role === UserRole.Trainer) return <Navigate to="/trainer/dashboard" replace />;
 
-  return <Navigate to="/login" replace />;
+  return <Navigate to="/superadmin/login" replace />;
 };
 
 export default SuperAdminRoute;

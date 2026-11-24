@@ -1,6 +1,6 @@
-﻿import React from 'react';
-import Login from '../pages/auth/login';
+import React from 'react';
+import GymLogin from '../pages/auth/GymLogin';
 
 export const routes = [
-  { path: '/login', element: <Login /> }
+  { path: '/login', element: <GymLogin /> }
 ];
