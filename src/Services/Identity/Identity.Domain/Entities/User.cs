@@ -41,6 +41,9 @@ public class User
 
     public Guid? UpdatedBy { get; set; }
 
+    // Navigation property: Reference to Gym
+    public Gym? Gym { get; set; }
+
     // Navigation property: One user has many refresh tokens
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

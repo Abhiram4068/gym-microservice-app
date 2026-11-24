@@ -62,11 +62,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
 // Register Application & Infrastructure Services
+builder.Services.AddScoped<IGymRepository, GymRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGymRegistrationService, GymRegistrationService>();
 
 // Configure CORS for Frontend
 builder.Services.AddCors(options =>

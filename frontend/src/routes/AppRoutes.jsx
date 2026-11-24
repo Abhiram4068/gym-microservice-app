@@ -1,9 +1,10 @@
-﻿import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SuperAdminRoute from './SuperAdminRoute';
 
-// Lazy Loaded Auth Pages
+// Lazy Loaded Auth & Registration Pages
 const Login = lazy(() => import('../pages/auth/login'));
+const GymOwnerRegister = lazy(() => import('../pages/gymowner/GymOwnerRegister'));
 
 // Lazy Loaded SuperAdmin Layout & Pages
 const SuperAdminLayout = lazy(() => import('../layouts/superadmin/SuperAdminLayout'));
@@ -17,17 +18,17 @@ const AppRoutes = () => {
         {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<GymOwnerRegister />} />
+        <Route path="/gymowner/register" element={<GymOwnerRegister />} />
 
         {/* SuperAdmin / Admin Protected Routes */}
-        {/* <Route element={<SuperAdminRoute />}> */}
-          <Route element={<SuperAdminLayout />}>
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/admin/dashboard" element={<Dashboard />} />
-            <Route path="/admin/owners" element={<ViewOwners />} />
-            <Route path="/superadmin/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/superadmin/owners" element={<Navigate to="/admin/owners" replace />} />
-          </Route>
-        {/* </Route> */}
+        <Route element={<SuperAdminLayout />}>
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/owners" element={<ViewOwners />} />
+          <Route path="/superadmin/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/superadmin/owners" element={<Navigate to="/admin/owners" replace />} />
+        </Route>
 
         {/* 404 / Catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
