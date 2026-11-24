@@ -19,7 +19,7 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
 
         {/* SuperAdmin / Admin Protected Routes */}
-        <Route element={<SuperAdminRoute />}>
+        {/* <Route element={<SuperAdminRoute />}> */}
           <Route element={<SuperAdminLayout />}>
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<Dashboard />} />
@@ -27,7 +27,7 @@ const AppRoutes = () => {
             <Route path="/superadmin/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/superadmin/owners" element={<Navigate to="/admin/owners" replace />} />
           </Route>
-        </Route>
+        {/* </Route> */}
 
         {/* 404 / Catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
