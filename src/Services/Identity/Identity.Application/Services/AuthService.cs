@@ -6,6 +6,7 @@ using GymPlatform.Common.Responses;
 using Identity.Application.DTOs.Auth;
 using Identity.Application.Interfaces.Repositories;
 using Identity.Application.Interfaces.Services;
+using Identity.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Services;
@@ -58,10 +59,18 @@ public class AuthService : IAuthService
             return ApiResponse<LoginResponseDto>.Fail("Invalid email or password.");
         }
 
-        if (!user.IsActive)
+        if (user.Status != UserStatus.Active)
         {
-            _logger.LogWarning("Login attempt failed: Inactive account {Email}", request.Email);
-            return ApiResponse<LoginResponseDto>.Fail("Account is deactivated. Please contact your administrator.");
+            var message = user.Status switch
+            {
+                UserStatus.Pending => "Your account is pending SuperAdmin approval.",
+                UserStatus.Inactive => "Account is deactivated. Please contact your administrator.",
+                UserStatus.Rejected => "Your account application has been rejected.",
+                UserStatus.Deleted => "Account not found or has been deleted.",
+                _ => "Account is not active. Please contact your administrator."
+            };
+            _logger.LogWarning("Login attempt rejected for {Email}: Status is {Status}", request.Email, user.Status);
+            return ApiResponse<LoginResponseDto>.Fail(message);
         }
 
         var isPasswordValid = _passwordHasher.VerifyPassword(request.Password, user.PasswordHash);

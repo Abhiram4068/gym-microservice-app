@@ -59,9 +59,6 @@ public class GymConfiguration : IEntityTypeConfiguration<Gym>
             .IsRequired(false)
             .HasMaxLength(500);
 
-        builder.Property(g => g.Status)
-            .IsRequired();
-
         builder.Property(g => g.RejectionReason)
             .IsRequired(false)
             .HasMaxLength(1000);

@@ -30,8 +30,6 @@ public class Gym
 
     public string? LogoUrl { get; set; }
 
-    public GymStatus Status { get; set; } = GymStatus.Pending;
-
     public string? RejectionReason { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

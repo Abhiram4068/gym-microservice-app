@@ -99,13 +99,12 @@ public class GymRegistrationService : IGymRegistrationService
             Country = string.IsNullOrWhiteSpace(request.Country) ? "India" : request.Country.Trim(),
             PinCode = request.PinCode.Trim(),
             WebsiteUrl = request.WebsiteUrl?.Trim(),
-            Status = GymStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };
 
         await _gymRepository.AddAsync(gym, cancellationToken);
 
-        // 4. Create User Record for GymOwner (Connected via GymId, IsActive = false)
+        // 4. Create User Record for GymOwner (Connected via GymId, Status = Pending)
         var passwordHash = _passwordHasher.HashPassword(request.Password);
         var ownerUser = new User
         {
@@ -117,7 +116,7 @@ public class GymRegistrationService : IGymRegistrationService
             PhoneNumber = normalizedOwnerPhone,
             PasswordHash = passwordHash,
             Role = UserRole.GymOwner,
-            IsActive = false, // Inactive until approved by SuperAdmin
+            Status = UserStatus.Pending, // Pending until approved by SuperAdmin
             MustChangePassword = false,
             CreatedAt = DateTime.UtcNow
         };
@@ -132,12 +131,11 @@ public class GymRegistrationService : IGymRegistrationService
             GymId = gym.Id,
             GymName = gym.Name,
             GymEmail = gym.Email,
-            GymStatus = gym.Status.ToString(),
             OwnerId = ownerUser.Id,
             OwnerName = $"{ownerUser.FirstName} {ownerUser.LastName}",
             OwnerEmail = ownerUser.Email,
             Role = ownerUser.Role.ToString(),
-            IsActive = ownerUser.IsActive,
+            Status = ownerUser.Status.ToString(),
             RegisteredAt = gym.CreatedAt,
             Message = "Gym registration submitted successfully. Your account is pending SuperAdmin approval."
         };

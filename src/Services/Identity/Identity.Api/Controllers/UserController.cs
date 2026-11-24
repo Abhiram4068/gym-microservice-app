@@ -21,7 +21,7 @@ public class UserController : ControllerBase
 
     /// <summary>
     /// Registers a new Gym and its corresponding Gym Owner.
-    /// Gym is saved in Gyms table (Status: Pending) and Owner in Users table (IsActive: false, Role: GymOwner).
+    /// Gym is saved in Gyms table and Owner in Users table (Status: Pending, Role: GymOwner).
     /// </summary>
     /// <param name="request">Gym and Owner registration details</param>
     /// <param name="cancellationToken">Cancellation token</param>

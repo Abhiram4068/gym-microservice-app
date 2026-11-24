@@ -27,7 +27,7 @@ public class User
 
     public string? ProfileImageUrl { get; set; }
 
-    public bool IsActive { get; set; } = true;
+    public UserStatus Status { get; set; } = UserStatus.Active;
 
     public bool MustChangePassword { get; set; } = false;
 

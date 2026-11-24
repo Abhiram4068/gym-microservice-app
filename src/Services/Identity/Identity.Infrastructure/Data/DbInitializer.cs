@@ -28,7 +28,7 @@ public static class DbInitializer
                     PhoneNumber = "9999999999",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123", 12),
                     Role = UserRole.SuperAdmin,
-                    IsActive = true,
+                    Status = UserStatus.Active,
                     MustChangePassword = false,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -43,7 +43,7 @@ public static class DbInitializer
                 // Ensure existing superadmin has known email, password hash, and active status
                 superAdmin.Email = "admin@gymapp.com";
                 superAdmin.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123", 12);
-                superAdmin.IsActive = true;
+                superAdmin.Status = UserStatus.Active;
                 await context.SaveChangesAsync();
 
                 logger.LogInformation("Verified and updated default SuperAdmin user: {Email}", superAdmin.Email);
