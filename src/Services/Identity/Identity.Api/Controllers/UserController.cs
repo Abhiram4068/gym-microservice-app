@@ -121,6 +121,7 @@ public class UserController : ControllerBase
 
         return Ok(result);
     }
+    
 
     private bool TryGetGymId(out Guid gymId)
     {
