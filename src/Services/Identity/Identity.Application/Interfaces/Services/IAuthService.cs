@@ -8,4 +8,5 @@ namespace Identity.Application.Interfaces.Services;
 public interface IAuthService
 {
     Task<ApiResponse<LoginResponseDto>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default);
+    Task<ApiResponse<GymLoginResponseDto>> GymLoginAsync(GymLoginRequestDto request, CancellationToken cancellationToken = default);
 }
