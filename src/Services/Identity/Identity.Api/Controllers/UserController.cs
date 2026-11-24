@@ -63,6 +63,7 @@ public class UserController : ControllerBase
     {
         var result = await _gymOwnerService.GetGymOwnersAsync(request, cancellationToken);
         return Ok(result);
+        
     }
 
     /// <summary>
@@ -127,6 +128,7 @@ public class UserController : ControllerBase
 
         return Ok(result);
     }
+    
 
     /// <summary>
     /// Rejects a gym owner's application with an optional rejection reason.
