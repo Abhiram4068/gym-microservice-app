@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 
 namespace Identity.Application.Interfaces.Repositories;
 
@@ -13,4 +15,12 @@ public interface IUserRepository
     Task<bool> ExistsByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default);
     Task AddAsync(User user, CancellationToken cancellationToken = default);
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<User> Items, int TotalCount)> GetGymOwnersPagedAsync(
+        string? search,
+        UserStatus? status,
+        string? sortBy,
+        string? sortOrder,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 }

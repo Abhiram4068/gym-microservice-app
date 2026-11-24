@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Identity.Application.Interfaces.Repositories;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using Identity.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,5 +54,76 @@ public class UserRepository : IUserRepository
     {
         _context.Users.Update(user);
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetGymOwnersPagedAsync(
+        string? search,
+        UserStatus? status,
+        string? sortBy,
+        string? sortOrder,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Users
+            .Include(u => u.Gym)
+            .Where(u => u.Role == UserRole.GymOwner);
+
+        // 1. Status Filter
+        if (status.HasValue)
+        {
+            query = query.Where(u => u.Status == status.Value);
+        }
+
+        // 2. Search Filter (Owner Name, Email, Phone, Gym Name, Gym Email)
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(u =>
+                u.FirstName.Contains(term) ||
+                u.LastName.Contains(term) ||
+                (u.FirstName + " " + u.LastName).Contains(term) ||
+                u.Email.Contains(term) ||
+                (u.PhoneNumber != null && u.PhoneNumber.Contains(term)) ||
+                (u.Gym != null && u.Gym.Name.Contains(term)) ||
+                (u.Gym != null && u.Gym.Email.Contains(term)));
+        }
+
+        // 3. Total Count
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // 4. Sorting
+        bool isDescending = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+
+        query = (sortBy?.ToLowerInvariant()) switch
+        {
+            "name" or "ownername" => isDescending
+                ? query.OrderByDescending(u => u.FirstName).ThenByDescending(u => u.LastName)
+                : query.OrderBy(u => u.FirstName).ThenBy(u => u.LastName),
+            "gymname" or "gym" => isDescending
+                ? query.OrderByDescending(u => u.Gym != null ? u.Gym.Name : string.Empty)
+                : query.OrderBy(u => u.Gym != null ? u.Gym.Name : string.Empty),
+            "email" => isDescending
+                ? query.OrderByDescending(u => u.Email)
+                : query.OrderBy(u => u.Email),
+            "status" => isDescending
+                ? query.OrderByDescending(u => u.Status)
+                : query.OrderBy(u => u.Status),
+            _ => isDescending
+                ? query.OrderByDescending(u => u.CreatedAt)
+                : query.OrderBy(u => u.CreatedAt)
+        };
+
+        // 5. Pagination
+        var page = pageNumber < 1 ? 1 : pageNumber;
+        var size = pageSize < 1 ? 10 : (pageSize > 100 ? 100 : pageSize);
+
+        var items = await query
+            .AsNoTracking()
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 }

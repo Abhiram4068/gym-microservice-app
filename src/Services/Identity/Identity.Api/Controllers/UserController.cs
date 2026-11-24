@@ -4,6 +4,7 @@ using GymPlatform.Common.Responses;
 using Identity.Application.DTOs.Request;
 using Identity.Application.DTOs.Response;
 using Identity.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.Api.Controllers;
@@ -13,10 +14,14 @@ namespace Identity.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IGymRegistrationService _gymRegistrationService;
+    private readonly IGymOwnerService _gymOwnerService;
 
-    public UserController(IGymRegistrationService gymRegistrationService)
+    public UserController(
+        IGymRegistrationService gymRegistrationService,
+        IGymOwnerService gymOwnerService)
     {
         _gymRegistrationService = gymRegistrationService;
+        _gymOwnerService = gymOwnerService;
     }
 
     /// <summary>
@@ -37,6 +42,25 @@ public class UserController : ControllerBase
             return BadRequest(result);
         }
 
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Retrieves a paginated, sorted, filterable, and searchable list of Gym Owners.
+    /// Accessible only by SuperAdmin (Admin / Role 1).
+    /// </summary>
+    /// <param name="request">Pagination, sort, filter, and search query parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpGet("gymowners")]
+    [Authorize(Roles = "SuperAdmin,1")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 401)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 403)]
+    public async Task<IActionResult> GetGymOwners(
+        [FromQuery] GetGymOwnersRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _gymOwnerService.GetGymOwnersAsync(request, cancellationToken);
         return Ok(result);
     }
 }
