@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/auth';
-import { getUserRole } from '../../utils/tokenStorage';
+import { getUserRole, UserRole } from '../../utils/tokenStorage';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,12 +21,14 @@ const Login = () => {
         // Decode token or user data to get role
         const roleNum = getUserRole();
 
-        if (roleNum === 1) {
+        if (roleNum === UserRole.SuperAdmin) {
           navigate('/admin/dashboard');
-        } else if (roleNum === 2) {
-          navigate('/manager/dashboard');
-        } else if (roleNum === 3) {
-          navigate('/employee/dashboard');
+        } else if (roleNum === UserRole.GymOwner) {
+          navigate('/owner/dashboard');
+        } else if (roleNum === UserRole.Receptionist) {
+          navigate('/receptionist/dashboard');
+        } else if (roleNum === UserRole.Trainer) {
+          navigate('/trainer/dashboard');
         } else {
           setError('Unable to determine user role.');
         }
@@ -41,15 +43,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#edf2f7] flex items-center justify-center p-4">
-      <div className="w-full max-w-[390px] bg-white border border-[#dfe5eb] rounded-[10px] p-8 sm:p-9 shadow-sm">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-[390px] bg-white border border-gray-100 rounded-[10px] p-8 sm:p-9 shadow-lg">
         {/* Brand Header */}
         <div className="text-center mb-6">
           <h1 className="font-extrabold text-[26px] tracking-[-0.6px] text-black leading-tight mb-1">
-            WIX
           </h1>
           <p className="text-[13.5px] font-medium text-[#596573]">
-            Superadmin Portal
+            Superadmin Login Portal
           </p>
         </div>
 

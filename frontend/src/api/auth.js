@@ -4,7 +4,7 @@ import { setToken, setRefreshToken } from '../utils/tokenStorage';
 export const authApi = {
   login: async (email, password) => {
     try {
-      const response = await axiosClient.post('/auth/login', { email, password });
+      const response = await axiosClient.post('/auth/adminlogin', { email, password });
       const data = response.data;
 
       if (data && data.success && data.data && data.data.accessToken) {
@@ -24,7 +24,7 @@ export const authApi = {
     } catch (error) {
       const message =
         error.response?.data?.message ||
-        'Login failed. Please check your credentials and try again.';
+        'Login failed.';
 
       return { success: false, message };
     }

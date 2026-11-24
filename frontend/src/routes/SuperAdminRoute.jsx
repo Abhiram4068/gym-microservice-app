@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { getToken, getUserRole } from '../utils/tokenStorage';
+import { getToken, getUserRole, UserRole } from '../utils/tokenStorage';
 
 const SuperAdminRoute = () => {
   const token = getToken();
@@ -11,13 +11,13 @@ const SuperAdminRoute = () => {
 
   const role = getUserRole();
 
-  // Role 1 is SuperAdmin (or customized role check)
-  if (role === 1 || role === 'SuperAdmin' || role === 'superadmin') {
+  if (role === UserRole.SuperAdmin) {
     return <Outlet />;
   }
 
-  if (role === 2) return <Navigate to="/manager/dashboard" replace />;
-  if (role === 3) return <Navigate to="/employee/dashboard" replace />;
+  if (role === UserRole.GymOwner) return <Navigate to="/owner/dashboard" replace />;
+  if (role === UserRole.Receptionist) return <Navigate to="/receptionist/dashboard" replace />;
+  if (role === UserRole.Trainer) return <Navigate to="/trainer/dashboard" replace />;
 
   return <Navigate to="/login" replace />;
 };
