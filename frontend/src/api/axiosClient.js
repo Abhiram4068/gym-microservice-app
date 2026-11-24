@@ -39,8 +39,12 @@ const axiosClient = {
       }
 
       if (!response.ok) {
-        // Handle 401 Unauthorized
-        if (response.status === 401 && !endpoint.includes('/auth/admin-login')) {
+        // Handle 401 Unauthorized (exclude login endpoints so bad credentials show inline error)
+        if (
+          response.status === 401 &&
+          !endpoint.includes('/auth/admin-login') &&
+          !endpoint.includes('/auth/gym-login')
+        ) {
           clearSession();
           if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
             window.location.href = '/login?expired=true';

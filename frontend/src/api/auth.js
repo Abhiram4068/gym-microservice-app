@@ -2,7 +2,7 @@ import axiosClient from './axiosClient';
 import { saveSession, clearSession } from '../utils/tokenStorage';
 
 export const authApi = {
-  login: async (email, password) => {
+  adminLogin: async (email, password) => {
     try {
       const response = await axiosClient.post('/auth/admin-login', { email, password });
       const res = response.data;
@@ -39,6 +39,50 @@ export const authApi = {
         message
       };
     }
+  },
+
+  gymLogin: async (email, password) => {
+    try {
+      const response = await axiosClient.post('/auth/gym-login', { email, password });
+      const res = response.data;
+
+      // Handle ApiResponse<GymLoginResponseDto> structure
+      const loginData = res?.data;
+      if (res && res.success && loginData && loginData.accessToken) {
+        saveSession({
+          accessToken: loginData.accessToken,
+          refreshToken: loginData.refreshToken,
+          user: loginData.user
+        });
+
+        return {
+          success: true,
+          data: loginData,
+          message: res.message || 'Login successful'
+        };
+      } else {
+        return {
+          success: false,
+          message: res?.message || 'Invalid response from server.'
+        };
+      }
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.errors) ? error.response.data.errors.join(', ') : null) ||
+        error.message ||
+        'Login failed. Please check your credentials and try again.';
+
+      return {
+        success: false,
+        message
+      };
+    }
+  },
+
+  // Backward compatibility alias for SuperAdmin login
+  login: async (email, password) => {
+    return authApi.adminLogin(email, password);
   },
 
   logout: async () => {
