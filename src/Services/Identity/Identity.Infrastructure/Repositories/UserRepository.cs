@@ -26,31 +26,10 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
 
-    public async Task<User?> GetByEmailWithGymAsync(string email, CancellationToken cancellationToken = default)
-    {
-        return await _context.Users
-            .Include(u => u.Gym)
-            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
-    }
-
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Users
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-    }
-
-    public async Task<User?> GetByIdAndGymIdAsync(Guid id, Guid gymId, CancellationToken cancellationToken = default)
-    {
-        return await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == id && u.GymId == gymId, cancellationToken);
-    }
-
-    public async Task<List<User>> GetReceptionistsByGymIdAsync(Guid gymId, CancellationToken cancellationToken = default)
-    {
-        return await _context.Users
-            .Where(u => u.GymId == gymId && u.Role == UserRole.Receptionist)
-            .OrderByDescending(u => u.CreatedAt)
-            .ToListAsync(cancellationToken);
     }
 
     public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
