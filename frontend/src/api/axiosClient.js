@@ -1,6 +1,6 @@
-﻿import { getToken } from '../utils/tokenStorage';
+import { getToken, clearSession } from '../utils/tokenStorage';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const axiosClient = {
   baseURL: BASE_URL,
@@ -20,32 +20,57 @@ const axiosClient = {
       headers
     };
 
+    if (options.credentials) {
+      config.credentials = options.credentials;
+    }
+
     if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
       config.body = JSON.stringify(config.body);
     }
 
-    const response = await fetch(url, config);
-    let data = null;
-
     try {
-      data = await response.json();
-    } catch {
-      data = null;
-    }
+      const response = await fetch(url, config);
+      let data = null;
 
-    if (!response.ok) {
-      const error = new Error(data?.message || `Request failed with status ${response.status}`);
-      error.response = {
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok) {
+        // Handle 401 Unauthorized
+        if (response.status === 401 && !endpoint.includes('/auth/admin-login')) {
+          clearSession();
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+            window.location.href = '/login?expired=true';
+          }
+        }
+
+        const error = new Error(
+          data?.message ||
+          (Array.isArray(data?.errors) ? data.errors.join(', ') : null) ||
+          `Request failed with status ${response.status}`
+        );
+        error.response = {
+          status: response.status,
+          data: data
+        };
+        throw error;
+      }
+
+      return {
         status: response.status,
-        data: data
+        data
       };
+    } catch (error) {
+      if (!error.response && error.name === 'TypeError') {
+        const networkError = new Error('Network error: Unable to connect to the server. Please ensure the backend is running.');
+        networkError.response = { status: 0, data: null };
+        throw networkError;
+      }
       throw error;
     }
-
-    return {
-      status: response.status,
-      data
-    };
   },
 
   post(endpoint, body, options = {}) {
@@ -80,3 +105,4 @@ const axiosClient = {
 };
 
 export default axiosClient;
+

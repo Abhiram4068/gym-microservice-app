@@ -1,12 +1,13 @@
-﻿import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { getToken, getUserRole, UserRole } from '../utils/tokenStorage';
+import React from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { isAuthenticated, getUserRole, UserRole } from '../utils/tokenStorage';
 
 const SuperAdminRoute = () => {
-  const token = getToken();
+  const location = useLocation();
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated()) {
+    // Preserve attempted destination
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   const role = getUserRole();
@@ -15,6 +16,7 @@ const SuperAdminRoute = () => {
     return <Outlet />;
   }
 
+  // Redirect users with other roles to their dedicated spaces
   if (role === UserRole.GymOwner) return <Navigate to="/owner/dashboard" replace />;
   if (role === UserRole.Receptionist) return <Navigate to="/receptionist/dashboard" replace />;
   if (role === UserRole.Trainer) return <Navigate to="/trainer/dashboard" replace />;
