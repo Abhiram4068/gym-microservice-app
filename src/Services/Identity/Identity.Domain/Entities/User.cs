@@ -1,14 +1,11 @@
 using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 using Identity.Domain.Enums;
 
 namespace Identity.Domain.Entities;
 
-[Table("Users")]
 public class User
 {
-    [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
 
     /// <summary>
@@ -16,32 +13,18 @@ public class User
     /// </summary>
     public Guid? GymId { get; set; }
 
-    [Required]
-    [MaxLength(100)]
     public string FirstName { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
 
-    [Required]
-    [EmailAddress]
-    [MaxLength(255)]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
-    [Phone]
-    [MaxLength(20)]
-    public string PhoneNumber { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
 
-    [Required]
-    [MaxLength(500)]
     public string PasswordHash { get; set; } = string.Empty;
 
-    [Required]
     public UserRole Role { get; set; }
 
-    [MaxLength(500)]
     public string? ProfileImageUrl { get; set; }
 
     public bool IsActive { get; set; } = true;
@@ -57,4 +40,7 @@ public class User
     public Guid? CreatedBy { get; set; }
 
     public Guid? UpdatedBy { get; set; }
+
+    // Navigation property: One user has many refresh tokens
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }
