@@ -97,6 +97,7 @@ public class UserController : ControllerBase
     {
         var result = await _gymOwnerService.GetGymOwnersAsync(request, cancellationToken);
         return Ok(result);
+        
     }
 
     /// <summary>
@@ -179,6 +180,7 @@ public class UserController : ControllerBase
 
         return Ok(result);
     }
+    
 
     /// <summary>
     /// Toggles active/inactive status of a staff user in the authenticated gym.
