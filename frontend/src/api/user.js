@@ -52,6 +52,117 @@ export const userApi = {
         errors: error.response?.data?.errors || []
       };
     }
+  },
+
+  /**
+   * Fetch full details of a specific gym owner and their connected gym.
+   * Calls GET /api/user/gymowners/{id}
+   * @param {string} id - The Gym Owner's GUID
+   */
+  getGymOwnerById: async (id) => {
+    try {
+      if (!id) {
+        return {
+          success: false,
+          message: 'Gym Owner ID is required.'
+        };
+      }
+
+      const response = await axiosClient.get(`/user/gymowners/${id}`);
+
+      return {
+        success: true,
+        data: response.data?.data,
+        message: response.data?.message
+      };
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.errors) ? error.response.data.errors.join(', ') : null) ||
+        error.message ||
+        'Failed to fetch gym owner details.';
+
+      return {
+        success: false,
+        message,
+        errors: error.response?.data?.errors || []
+      };
+    }
+  },
+
+  /**
+   * Approve a gym owner and activate their account.
+   * Calls POST /api/user/gymowners/{id}/approve
+   * @param {string} id - The Gym Owner's GUID
+   */
+  approveGymOwner: async (id) => {
+    try {
+      if (!id) {
+        return {
+          success: false,
+          message: 'Gym Owner ID is required.'
+        };
+      }
+
+      const response = await axiosClient.post(`/user/gymowners/${id}/approve`);
+
+      return {
+        success: true,
+        data: response.data?.data,
+        message: response.data?.message || 'Gym owner approved successfully.'
+      };
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.errors) ? error.response.data.errors.join(', ') : null) ||
+        error.message ||
+        'Failed to approve gym owner.';
+
+      return {
+        success: false,
+        message,
+        errors: error.response?.data?.errors || []
+      };
+    }
+  },
+
+  /**
+   * Reject a gym owner application with optional rejection reason.
+   * Calls POST /api/user/gymowners/{id}/reject
+   * @param {string} id - The Gym Owner's GUID
+   * @param {string} rejectionReason - Optional reason for rejection
+   */
+  rejectGymOwner: async (id, rejectionReason = '') => {
+    try {
+      if (!id) {
+        return {
+          success: false,
+          message: 'Gym Owner ID is required.'
+        };
+      }
+
+      const response = await axiosClient.post(`/user/gymowners/${id}/reject`, {
+        rejectionReason: rejectionReason?.trim() || null
+      });
+
+      return {
+        success: true,
+        data: response.data?.data,
+        message: response.data?.message || 'Gym owner application rejected.'
+      };
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.errors) ? error.response.data.errors.join(', ') : null) ||
+        error.message ||
+        'Failed to reject gym owner.';
+
+      return {
+        success: false,
+        message,
+        errors: error.response?.data?.errors || []
+      };
+    }
   }
 };
 
