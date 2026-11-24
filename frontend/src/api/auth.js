@@ -52,6 +52,26 @@ export const authApi = {
         window.location.href = '/login';
       }
     }
+  },
+
+  registerGym: async (gymData) => {
+    try {
+      const response = await axiosClient.post('/user/gym-register', gymData);
+      return {
+        success: true,
+        data: response.data?.data,
+        message: response.data?.message
+      };
+    } catch (error) {
+      const respData = error.response?.data;
+      const message = respData?.message || 'Gym registration failed.';
+      const errors = respData?.errors || [];
+      return {
+        success: false,
+        message,
+        errors
+      };
+    }
   }
 };
 

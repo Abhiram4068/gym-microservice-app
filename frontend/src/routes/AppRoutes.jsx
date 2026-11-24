@@ -2,8 +2,9 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SuperAdminRoute from './SuperAdminRoute';
 
-// Lazy Loaded Auth Pages
+// Lazy Loaded Auth & Registration Pages
 const Login = lazy(() => import('../pages/auth/login'));
+const GymOwnerRegister = lazy(() => import('../pages/gymowner/GymOwnerRegister'));
 
 // Lazy Loaded SuperAdmin Layout & Pages
 const SuperAdminLayout = lazy(() => import('../layouts/superadmin/SuperAdminLayout'));
@@ -17,6 +18,8 @@ const AppRoutes = () => {
         {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<GymOwnerRegister />} />
+        <Route path="/gymowner/register" element={<GymOwnerRegister />} />
 
         {/* SuperAdmin Protected Routes */}
         <Route element={<SuperAdminRoute />}>

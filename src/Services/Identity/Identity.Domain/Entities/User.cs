@@ -27,7 +27,7 @@ public class User
 
     public string? ProfileImageUrl { get; set; }
 
-    public bool IsActive { get; set; } = true;
+    public UserStatus Status { get; set; } = UserStatus.Active;
 
     public bool MustChangePassword { get; set; } = false;
 
@@ -40,6 +40,9 @@ public class User
     public Guid? CreatedBy { get; set; }
 
     public Guid? UpdatedBy { get; set; }
+
+    // Navigation property: Reference to Gym
+    public Gym? Gym { get; set; }
 
     // Navigation property: One user has many refresh tokens
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();

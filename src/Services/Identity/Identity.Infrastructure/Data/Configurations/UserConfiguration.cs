@@ -1,4 +1,5 @@
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -45,8 +46,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired(false)
             .HasMaxLength(500);
 
-        builder.Property(u => u.IsActive)
-            .HasDefaultValue(true);
+        builder.Property(u => u.Status)
+            .IsRequired()
+            .HasDefaultValue(UserStatus.Active);
 
         builder.Property(u => u.MustChangePassword)
             .HasDefaultValue(false);
