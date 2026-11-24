@@ -13,7 +13,7 @@ const ViewOwners = lazy(() => import('../pages/superadmin/ViewOwners'));
 
 const AppRoutes = () => {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center font-medium text-slate-500">Loading...</div>}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login" replace />} />
@@ -21,13 +21,15 @@ const AppRoutes = () => {
         <Route path="/register" element={<GymOwnerRegister />} />
         <Route path="/gymowner/register" element={<GymOwnerRegister />} />
 
-        {/* SuperAdmin / Admin Protected Routes */}
-        <Route element={<SuperAdminLayout />}>
-          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/owners" element={<ViewOwners />} />
-          <Route path="/superadmin/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/superadmin/owners" element={<Navigate to="/admin/owners" replace />} />
+        {/* SuperAdmin Protected Routes */}
+        <Route element={<SuperAdminRoute />}>
+          <Route element={<SuperAdminLayout />}>
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+            <Route path="/admin/owners" element={<ViewOwners />} />
+            <Route path="/superadmin/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/superadmin/owners" element={<Navigate to="/admin/owners" replace />} />
+          </Route>
         </Route>
 
         {/* 404 / Catch-all */}

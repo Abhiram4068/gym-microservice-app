@@ -1,32 +1,56 @@
 import axiosClient from './axiosClient';
-import { setToken, setRefreshToken } from '../utils/tokenStorage';
+import { saveSession, clearSession } from '../utils/tokenStorage';
 
 export const authApi = {
   login: async (email, password) => {
     try {
       const response = await axiosClient.post('/auth/admin-login', { email, password });
-      const data = response.data;
+      const res = response.data;
 
-      if (data && data.success && data.data && data.data.accessToken) {
-        setToken(data.data.accessToken);
+      // Handle ApiResponse<LoginResponseDto> structure
+      const loginData = res?.data;
+      if (res && res.success && loginData && loginData.accessToken) {
+        saveSession({
+          accessToken: loginData.accessToken,
+          refreshToken: loginData.refreshToken,
+          user: loginData.user
+        });
 
-        if (data.data.refreshToken) {
-          setRefreshToken(data.data.refreshToken);
-        }
-
-        return { success: true, data: data.data };
+        return {
+          success: true,
+          data: loginData,
+          message: res.message || 'Login successful'
+        };
       } else {
         return {
           success: false,
-          message: data?.message || 'Invalid response from server: Token missing.'
+          message: res?.message || 'Invalid response from server.'
         };
       }
     } catch (error) {
       const message =
         error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.errors) ? error.response.data.errors.join(', ') : null) ||
+        error.message ||
         'Login failed. Please check your credentials and try again.';
 
-      return { success: false, message };
+      return {
+        success: false,
+        message
+      };
+    }
+  },
+
+  logout: async () => {
+    try {
+      // Future hook: await axiosClient.post('/auth/logout');
+    } catch {
+      // Ignore network errors during logout
+    } finally {
+      clearSession();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
   },
 
