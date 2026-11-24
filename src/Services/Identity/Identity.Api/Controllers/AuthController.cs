@@ -38,25 +38,4 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
-
-    [HttpPost("gym-login")]
-    [ProducesResponseType(typeof(ApiResponse<GymLoginResponseDto>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<GymLoginResponseDto>), 400)]
-    [ProducesResponseType(typeof(ApiResponse<GymLoginResponseDto>), 401)]
-    public async Task<IActionResult> GymLogin([FromBody] GymLoginRequestDto request, CancellationToken cancellationToken)
-    {
-        var result = await _authService.GymLoginAsync(request, cancellationToken);
-
-        if (!result.Success)
-        {
-            if (result.Message == "Validation failed.")
-            {
-                return BadRequest(result);
-            }
-
-            return Unauthorized(result);
-        }
-
-        return Ok(result);
-    }
 }
