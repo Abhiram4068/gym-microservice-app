@@ -126,4 +126,19 @@ public class UserRepository : IUserRepository
 
         return (items, totalCount);
     }
+
+    public async Task<User?> GetGymOwnerByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Include(u => u.Gym)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == id && u.Role == UserRole.GymOwner, cancellationToken);
+    }
+
+    public async Task<User?> GetGymOwnerByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Include(u => u.Gym)
+            .FirstOrDefaultAsync(u => (u.Id == id || (u.GymId.HasValue && u.GymId.Value == id)) && u.Role == UserRole.GymOwner, cancellationToken);
+    }
 }

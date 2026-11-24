@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/common/Toast';
 import { userApi } from '../../api/user';
 import { UserStatus } from '../../types/entities';
@@ -16,6 +16,7 @@ const getGymColor = (str) => {
 };
 
 const ViewOwners = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const outletCtx = useOutletContext();
   const globalSearch = outletCtx?.globalSearch || '';
@@ -150,35 +151,74 @@ const ViewOwners = () => {
     );
   };
 
-  const updateStatus = (id, newStatus) => {
-    setOwners((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
-    );
-    showToast(`Owner status updated to ${newStatus}`);
+  const updateStatus = async (id, newStatus) => {
+    try {
+      if (newStatus === 'Approved') {
+        const res = await userApi.approveGymOwner(id);
+        if (res.success) {
+          setOwners((prev) =>
+            prev.map((o) => (o.id === id ? { ...o, status: 'Approved', statusName: 'Active', statusCode: 1 } : o))
+          );
+          showToast(res.message || 'Gym owner approved successfully.');
+        } else {
+          showToast(res.message || 'Failed to approve gym owner.', 'error');
+        }
+      } else if (newStatus === 'Rejected') {
+        const res = await userApi.rejectGymOwner(id);
+        if (res.success) {
+          setOwners((prev) =>
+            prev.map((o) => (o.id === id ? { ...o, status: 'Rejected', statusName: 'Rejected', statusCode: 4 } : o))
+          );
+          showToast(res.message || 'Gym owner application rejected.');
+        } else {
+          showToast(res.message || 'Failed to reject gym owner.', 'error');
+        }
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to update status.', 'error');
+    }
   };
 
-  const batchApproveSelected = () => {
-    const selected = owners.filter((o) => o.selected);
+  const batchApproveSelected = async () => {
+    const selected = owners.filter((o) => o.selected && o.status !== 'Approved');
     if (selected.length === 0) {
-      showToast('Please select at least one gym owner.');
+      showToast('Please select at least one pending or rejected gym owner.');
       return;
     }
-    setOwners((prev) =>
-      prev.map((o) => (o.selected ? { ...o, status: 'Approved' } : o))
-    );
-    showToast(`Approved ${selected.length} gym owner(s).`);
+    try {
+      let successCount = 0;
+      for (const owner of selected) {
+        const res = await userApi.approveGymOwner(owner.id);
+        if (res.success) {
+          successCount++;
+        }
+      }
+      showToast(`Approved ${successCount} gym owner(s).`);
+      fetchGymOwners();
+    } catch (err) {
+      showToast('Error during batch approval.', 'error');
+    }
   };
 
-  const batchRejectSelected = () => {
-    const selected = owners.filter((o) => o.selected);
+  const batchRejectSelected = async () => {
+    const selected = owners.filter((o) => o.selected && o.status !== 'Rejected');
     if (selected.length === 0) {
-      showToast('Please select at least one gym owner.');
+      showToast('Please select at least one gym owner to reject.');
       return;
     }
-    setOwners((prev) =>
-      prev.map((o) => (o.selected ? { ...o, status: 'Rejected' } : o))
-    );
-    showToast(`Rejected ${selected.length} gym owner(s).`);
+    try {
+      let successCount = 0;
+      for (const owner of selected) {
+        const res = await userApi.rejectGymOwner(owner.id);
+        if (res.success) {
+          successCount++;
+        }
+      }
+      showToast(`Rejected ${successCount} gym owner(s).`);
+      fetchGymOwners();
+    } catch (err) {
+      showToast('Error during batch rejection.', 'error');
+    }
   };
 
   const sendBatchEmail = () => {
@@ -433,12 +473,12 @@ const ViewOwners = () => {
         <table className="w-full border-collapse text-left whitespace-nowrap">
           <thead className="bg-[#f8fafc] border-b border-[#eaecf0]">
             <tr>
-              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467] uppercase tracking-wider">Gym Owner Name</th>
-              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467] uppercase tracking-wider">Gym Organization</th>
-              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467] uppercase tracking-wider">Email Address</th>
-              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467] uppercase tracking-wider">Phone Number</th>
-              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467] uppercase tracking-wider">Status</th>
-              <th className="px-4 py-2 text-[11.5px] font-semibold text-[#475467] uppercase tracking-wider text-right pr-5">Action</th>
+              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467]  tracking-wider">Gym Owner Name</th>
+              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467]  tracking-wider">Gym Organization</th>
+              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467]  tracking-wider">Email Address</th>
+              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467]  tracking-wider">Phone Number</th>
+              <th className="px-3 py-2 text-[11.5px] font-semibold text-[#475467]  tracking-wider">Status</th>
+              <th className="px-4 py-2 text-[11.5px] font-semibold text-[#475467]  tracking-wider text-right pr-5">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#eaecf0]">
@@ -588,7 +628,7 @@ const ViewOwners = () => {
                           Reject
                         </button>
                         <button
-                          onClick={() => showToast(`Viewing details for ${owner.name}`)}
+                          onClick={() => navigate(`/admin/owners/${owner.id}`)}
                           className="text-xs font-medium text-[#116dff] hover:text-[#0057e6] hover:underline cursor-pointer border-none bg-transparent p-0"
                         >
                           View

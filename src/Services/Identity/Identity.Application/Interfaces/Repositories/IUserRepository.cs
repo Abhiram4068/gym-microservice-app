@@ -23,4 +23,6 @@ public interface IUserRepository
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken = default);
+    Task<User?> GetGymOwnerByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<User?> GetGymOwnerByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
 }
