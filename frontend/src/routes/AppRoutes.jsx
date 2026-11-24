@@ -17,6 +17,7 @@ const ManageReceptionists = lazy(() => import('../pages/gymowner/ManageReception
 const SuperAdminLayout = lazy(() => import('../layouts/superadmin/SuperAdminLayout'));
 const Dashboard = lazy(() => import('../pages/superadmin/Dashboard'));
 const ViewOwners = lazy(() => import('../pages/superadmin/ViewOwners'));
+const OwnerDetails = lazy(() => import('../pages/superadmin/OwnerDetails'));
 
 const AppRoutes = () => {
   return (
@@ -48,8 +49,10 @@ const AppRoutes = () => {
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/owners" element={<ViewOwners />} />
+            <Route path="/admin/owners/:id" element={<OwnerDetails />} />
             <Route path="/superadmin/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/superadmin/owners" element={<Navigate to="/admin/owners" replace />} />
+            <Route path="/superadmin/owners/:id" element={<OwnerDetails />} />
           </Route>
         </Route>
 
