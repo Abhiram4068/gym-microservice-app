@@ -24,9 +24,16 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // Configure EF Core with SQL Server
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "ConnectionStrings:DefaultConnection must be configured via dotnet user-secrets or environment variables.");
+}
+
 builder.Services.AddDbContext<IdentityDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        connectionString,
         sqlOptions => sqlOptions.MigrationsAssembly(typeof(IdentityDbContext).Assembly.FullName)));
 
 // Configure JwtSettings
@@ -35,7 +42,7 @@ var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<
 if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey) || jwtSettings.SecretKey.Length < 32)
 {
     throw new InvalidOperationException(
-        "JwtSettings:SecretKey must be configured with at least 32 characters via user-secrets or environment variables.");
+        "JwtSettings:SecretKey must be configured with at least 32 characters via dotnet user-secrets or environment variables.");
 }
 
 // Configure JWT Authentication
