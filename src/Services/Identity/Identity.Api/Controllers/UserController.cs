@@ -148,6 +148,77 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves details of a specific receptionist belonging to the authenticated Gym Owner's gym.
+    /// </summary>
+    [HttpGet("receptionists/{id:guid}")]
+    [Authorize(Roles = "GymOwner")]
+    [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 404)]
+    public async Task<IActionResult> GetReceptionistById(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        if (id == Guid.Empty)
+        {
+            return BadRequest(ApiResponse<ReceptionistDto>.Fail("A valid Receptionist ID must be provided."));
+        }
+
+        if (!TryGetGymId(out var gymId))
+        {
+            return Unauthorized(ApiResponse<ReceptionistDto>.Fail("Missing or invalid gym identity claim."));
+        }
+
+        var result = await _userService.GetReceptionistByIdAsync(gymId, id, cancellationToken);
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Updates details of an existing receptionist in the authenticated Gym Owner's gym.
+    /// </summary>
+    [HttpPut("receptionists/{id:guid}")]
+    [Authorize(Roles = "GymOwner")]
+    [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 404)]
+    public async Task<IActionResult> UpdateReceptionist(
+        [FromRoute] Guid id,
+        [FromBody] UpdateReceptionistRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        if (id == Guid.Empty)
+        {
+            return BadRequest(ApiResponse<ReceptionistDto>.Fail("A valid Receptionist ID must be provided."));
+        }
+
+        if (!TryGetGymId(out var gymId))
+        {
+            return Unauthorized(ApiResponse<ReceptionistDto>.Fail("Missing or invalid gym identity claim."));
+        }
+
+        var ownerId = GetCurrentUserId();
+        var result = await _userService.UpdateReceptionistAsync(ownerId, gymId, id, request, cancellationToken);
+
+        if (!result.Success)
+        {
+            if (result.Message != null && result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(result);
+            }
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Approves a pending or inactive gym owner and activates their account and gym registration.
     /// Accessible only by SuperAdmin (Admin / Role 1).
     /// </summary>
@@ -203,6 +274,41 @@ public class UserController : ControllerBase
 
         if (!result.Success)
         {
+            if (result.Message != null && result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(result);
+            }
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Soft-deletes a receptionist in the authenticated gym.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "GymOwner")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 404)]
+    public async Task<IActionResult> DeleteReceptionist(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetGymId(out var gymId))
+        {
+            return Unauthorized(ApiResponse<bool>.Fail("Missing or invalid gym identity claim."));
+        }
+
+        var result = await _userService.DeleteReceptionistAsync(gymId, id, cancellationToken);
+        if (!result.Success)
+        {
+            if (result.Message != null && result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(result);
+            }
             return BadRequest(result);
         }
 

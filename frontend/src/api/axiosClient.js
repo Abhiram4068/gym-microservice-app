@@ -100,6 +100,14 @@ const axiosClient = {
     });
   },
 
+  patch(endpoint, body, options = {}) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      ...(body !== undefined ? { body } : {}),
+      ...options
+    });
+  },
+
   delete(endpoint, options = {}) {
     return this.request(endpoint, {
       method: 'DELETE',

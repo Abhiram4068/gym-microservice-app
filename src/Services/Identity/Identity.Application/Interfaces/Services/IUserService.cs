@@ -11,5 +11,8 @@ public interface IUserService
 {
     Task<ApiResponse<ReceptionistDto>> CreateReceptionistAsync(Guid ownerId, Guid gymId, CreateReceptionistRequestDto request, CancellationToken cancellationToken = default);
     Task<ApiResponse<List<ReceptionistDto>>> GetReceptionistsByGymIdAsync(Guid gymId, CancellationToken cancellationToken = default);
+    Task<ApiResponse<ReceptionistDto>> GetReceptionistByIdAsync(Guid gymId, Guid userId, CancellationToken cancellationToken = default);
+    Task<ApiResponse<ReceptionistDto>> UpdateReceptionistAsync(Guid ownerId, Guid gymId, Guid userId, UpdateReceptionistRequestDto request, CancellationToken cancellationToken = default);
     Task<ApiResponse<ReceptionistDto>> ToggleUserStatusAsync(Guid gymId, Guid userId, CancellationToken cancellationToken = default);
+    Task<ApiResponse<bool>> DeleteReceptionistAsync(Guid gymId, Guid userId, CancellationToken cancellationToken = default);
 }

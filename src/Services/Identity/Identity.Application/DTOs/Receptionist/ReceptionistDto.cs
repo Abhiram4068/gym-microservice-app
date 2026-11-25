@@ -13,5 +13,6 @@ public class ReceptionistDto
     public int Status { get; set; }
     public string StatusName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
 }

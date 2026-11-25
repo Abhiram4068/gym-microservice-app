@@ -47,6 +47,50 @@ export const userApi = {
   },
 
   /**
+   * Fetch single Receptionist details by ID for the current gym
+   * @param {string} id - User Guid
+   */
+  getReceptionistById: async (id) => {
+    try {
+      const response = await axiosClient.get(`/user/receptionists/${id}`);
+      return {
+        success: true,
+        data: response.data?.data,
+        message: response.data?.message
+      };
+    } catch (error) {
+      const respData = error.response?.data;
+      return {
+        success: false,
+        message: respData?.message || 'Failed to fetch receptionist details.'
+      };
+    }
+  },
+
+  /**
+   * Update Receptionist details (firstName, lastName)
+   * @param {string} id - User Guid
+   * @param {Object} data - { firstName, lastName }
+   */
+  updateReceptionist: async (id, data) => {
+    try {
+      const response = await axiosClient.put(`/user/receptionists/${id}`, data);
+      return {
+        success: true,
+        data: response.data?.data,
+        message: response.data?.message || 'Receptionist details updated successfully.'
+      };
+    } catch (error) {
+      const respData = error.response?.data;
+      return {
+        success: false,
+        message: respData?.message || 'Failed to update receptionist.',
+        errors: respData?.errors || []
+      };
+    }
+  },
+
+  /**
    * Toggle active/inactive status of a staff user
    * @param {string} id - User Guid
    */
@@ -63,6 +107,27 @@ export const userApi = {
       return {
         success: false,
         message: respData?.message || 'Failed to update status.'
+      };
+    }
+  },
+
+  /**
+   * Soft-delete a receptionist user from the current gym
+   * @param {string} id - User Guid
+   */
+  deleteReceptionist: async (id) => {
+    try {
+      const response = await axiosClient.delete(`/user/${id}`);
+      return {
+        success: true,
+        data: response.data?.data,
+        message: response.data?.message || 'Receptionist deleted successfully.'
+      };
+    } catch (error) {
+      const respData = error.response?.data;
+      return {
+        success: false,
+        message: respData?.message || 'Failed to delete receptionist.'
       };
     }
   },
