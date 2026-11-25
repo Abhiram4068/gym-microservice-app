@@ -22,8 +22,9 @@ const ManageReceptionists = () => {
 
   const [receptionists, setReceptionists] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [busyAction, setBusyAction] = useState(null); // { id, type: 'activate' | 'deactivate' | 'delete' }
+  const [busyAction, setBusyAction] = useState(null); // { id, type: 'activate' | 'deactivate' | 'update' | 'delete' }
   const [selectedReceptionist, setSelectedReceptionist] = useState(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null); // receptionist object pending confirmation
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,24 +64,59 @@ const ManageReceptionists = () => {
       if (result.success) {
         const nextStatus = targetAction === 'activate' ? 1 : 2;
         const nextStatusName = targetAction === 'activate' ? 'Active' : 'Inactive';
+        const updatedRec = result.data || { ...rec, status: nextStatus, statusName: nextStatusName };
         showToast(result.message || 'Status updated successfully.');
         setReceptionists((prev) =>
-          prev.map((r) =>
-            r.id === rec.id
-              ? { ...r, status: nextStatus, statusName: nextStatusName }
-              : r
-          )
+          prev.map((r) => (r.id === rec.id ? updatedRec : r))
         );
         setSelectedReceptionist((prev) =>
-          prev?.id === rec.id
-            ? { ...prev, status: nextStatus, statusName: nextStatusName }
-            : prev
+          prev?.id === rec.id ? updatedRec : prev
         );
       } else {
         showToast(result.message || 'Failed to update status.', 'error');
       }
     } catch (err) {
       showToast(err?.message || 'An error occurred while updating status.', 'error');
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const handleOpenReceptionist = async (rec) => {
+    setSelectedReceptionist(rec);
+    setIsDetailLoading(true);
+    try {
+      const result = await userApi.getReceptionistById(rec.id);
+      if (result.success && result.data) {
+        setSelectedReceptionist((prev) => (prev?.id === rec.id ? result.data : prev));
+        setReceptionists((prev) => prev.map((r) => (r.id === rec.id ? result.data : r)));
+      }
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  const handleUpdateReceptionist = async (id, payload) => {
+    if (busyAction) return { success: false, message: 'Another action is in progress.' };
+    setBusyAction({ id, type: 'update' });
+    try {
+      const result = await userApi.updateReceptionist(id, payload);
+      if (result.success && result.data) {
+        showToast(result.message || 'Receptionist details updated successfully.');
+        setReceptionists((prev) => prev.map((r) => (r.id === id ? result.data : r)));
+        setSelectedReceptionist((prev) => (prev?.id === id ? result.data : prev));
+        return { success: true };
+      }
+      return {
+        success: false,
+        message: result.message || 'Failed to update receptionist.',
+        errors: result.errors || []
+      };
+    } catch (err) {
+      return {
+        success: false,
+        message: err?.message || 'An error occurred while updating receptionist.'
+      };
     } finally {
       setBusyAction(null);
     }
@@ -484,12 +520,12 @@ const ManageReceptionists = () => {
                   return (
                     <tr
                       key={rec.id}
-                      onClick={() => setSelectedReceptionist(rec)}
+                      onClick={() => handleOpenReceptionist(rec)}
                       tabIndex={0}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          setSelectedReceptionist(rec);
+                          handleOpenReceptionist(rec);
                         }
                       }}
                       className="group hover:bg-[#f8fafc]/90 transition-colors cursor-pointer focus-visible:outline-none focus-visible:bg-[#eff6ff]/50"
@@ -669,9 +705,11 @@ const ManageReceptionists = () => {
       <ViewReceptionistModal
         receptionist={selectedReceptionist}
         gymName={user?.gymName}
+        isDetailLoading={isDetailLoading}
         busyAction={busyAction}
         onClose={() => setSelectedReceptionist(null)}
         onStatusChange={handleStatusChange}
+        onUpdateReceptionist={handleUpdateReceptionist}
         onRequestDelete={(rec) => setDeleteTarget(rec)}
         onCopy={handleCopyValue}
       />

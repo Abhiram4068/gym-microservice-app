@@ -19,17 +19,20 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IValidator<CreateReceptionistRequestDto> _createReceptionistValidator;
+    private readonly IValidator<UpdateReceptionistRequestDto> _updateReceptionistValidator;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IValidator<CreateReceptionistRequestDto> createReceptionistValidator,
+        IValidator<UpdateReceptionistRequestDto> updateReceptionistValidator,
         ILogger<UserService> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _createReceptionistValidator = createReceptionistValidator;
+        _updateReceptionistValidator = updateReceptionistValidator;
         _logger = logger;
     }
 
@@ -97,6 +100,51 @@ public class UserService : IUserService
         return ApiResponse<List<ReceptionistDto>>.Ok(dtos);
     }
 
+    public async Task<ApiResponse<ReceptionistDto>> GetReceptionistByIdAsync(
+        Guid gymId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAndGymIdAsync(userId, gymId, cancellationToken);
+        if (user == null || user.Status == UserStatus.Deleted || user.Role != UserRole.Receptionist)
+        {
+            return ApiResponse<ReceptionistDto>.Fail("Receptionist not found in your gym.");
+        }
+
+        return ApiResponse<ReceptionistDto>.Ok(MapToReceptionistDto(user));
+    }
+
+    public async Task<ApiResponse<ReceptionistDto>> UpdateReceptionistAsync(
+        Guid ownerId,
+        Guid gymId,
+        Guid userId,
+        UpdateReceptionistRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        var validationResult = await _updateReceptionistValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors.ConvertAll(e => e.ErrorMessage);
+            return ApiResponse<ReceptionistDto>.Fail("Validation failed.", errors);
+        }
+
+        var user = await _userRepository.GetByIdAndGymIdAsync(userId, gymId, cancellationToken);
+        if (user == null || user.Status == UserStatus.Deleted || user.Role != UserRole.Receptionist)
+        {
+            return ApiResponse<ReceptionistDto>.Fail("Receptionist not found in your gym.");
+        }
+
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
+        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedBy = ownerId;
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        _logger.LogInformation("Receptionist {UserId} updated in Gym {GymId} by Owner {OwnerId}", user.Id, gymId, ownerId);
+
+        return ApiResponse<ReceptionistDto>.Ok(MapToReceptionistDto(user), "Receptionist details updated successfully.");
+    }
+
     public async Task<ApiResponse<ReceptionistDto>> ToggleUserStatusAsync(
         Guid gymId,
         Guid userId,
@@ -153,6 +201,7 @@ public class UserService : IUserService
             Status = (int)user.Status,
             StatusName = user.Status.ToString(),
             CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
             LastLoginAt = user.LastLoginAt
         };
     }
