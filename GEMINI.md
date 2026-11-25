@@ -111,7 +111,7 @@ Following the SRS roadmap and current repo state, work proceeds in vertical slic
 - [ ] **Shared Primitives (`GymPlatform.Common`)**: Add `ClaimsPrincipalExtensions`, typed `ErrorType` / `Result` mapping for controllers, global `ProblemDetails` exception handler, and Correlation ID middleware.
 - [ ] **Identity Enhancements**: Add `Trainer` creation/listing/status management, `Gym` profile settings (`TimeZoneId`, `CurrencyCode`, notification preferences), and align routes toward `/api/v1/...` (or clean YARP path transforms).
 - [ ] **YARP API Gateway (`GymPlatform.Gateway`)**: Configure YARP routes, CORS, rate limiting on auth/webhook endpoints, and correlation ID forwarding. Point frontend `/api` proxy to Gateway.
-- [ ] **Local Infra**: Add `docker-compose.yml` (Database, RabbitMQ with Management UI) and `.env.example` (no secrets committed).
+- [ ] **Local Infra**: Add `docker-compose.yml` (Database, RabbitMQ with Management UI) and configure local secrets via `dotnet user-secrets` (no secrets committed).
 
 ### Phase 2 — Contracts, `Members` Service & Outbox
 - [ ] **`GymPlatform.Contracts`**: Define immutable `MemberRegisteredV1`, `MembershipExpiringSoonV1`, and `PaymentCapturedV1`.
