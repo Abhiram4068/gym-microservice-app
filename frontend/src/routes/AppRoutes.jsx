@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SuperAdminRoute from './SuperAdminRoute';
 import GymOwnerRoute from './GymOwnerRoute';

@@ -1,26 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { getUserData } from '../../utils/tokenStorage';
 import { authApi } from '../../api/auth';
 
 const GymOwnerSidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
-  const user = getUserData();
 
   const handleLogout = async () => {
     if (onClose) onClose();
     await authApi.logout();
   };
 
-  // Collapsible Receptionist section state (open by default if active route is receptionist)
+  // Collapsible Receptionist section state (open by default)
   const isReceptionistRoute = location.pathname.startsWith('/owner/receptionist');
   const [isReceptionistOpen, setIsReceptionistOpen] = useState(true);
-
-  useEffect(() => {
-    if (isReceptionistRoute) {
-      setIsReceptionistOpen(true);
-    }
-  }, [isReceptionistRoute]);
 
   const navItemClass = ({ isActive }) =>
     `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition duration-150 no-underline ${

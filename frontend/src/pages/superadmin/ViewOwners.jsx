@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { useToast } from '../../components/common/Toast';
+import { useToast } from '../../components/common/useToast';
 import { userApi } from '../../api/user';
 import { UserStatus } from '../../types/entities';
 
@@ -61,7 +61,6 @@ const ViewOwners = () => {
 
   const mapApiOwner = (item) => {
     const isApproved = item.status === UserStatus.Active || item.statusName === 'Active' || item.statusName === 'Approved';
-    const isPending = item.status === UserStatus.Pending || item.statusName === 'Pending';
     const isRejected = item.status === UserStatus.Rejected || item.statusName === 'Rejected';
 
     let displayStatus = 'Pending';
@@ -138,18 +137,11 @@ const ViewOwners = () => {
   }, [currentFilter, globalSearch, tableSearch, pagination.pageNumber, pagination.pageSize]);
 
   useEffect(() => {
-    fetchGymOwners();
+    const timer = setTimeout(() => {
+      fetchGymOwners();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchGymOwners]);
-
-  const toggleSelectAll = (checked) => {
-    setOwners((prev) => prev.map((o) => ({ ...o, selected: checked })));
-  };
-
-  const toggleSelectRow = (id, checked) => {
-    setOwners((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, selected: checked } : o))
-    );
-  };
 
   const updateStatus = async (id, newStatus) => {
     try {
@@ -195,7 +187,7 @@ const ViewOwners = () => {
       }
       showToast(`Approved ${successCount} gym owner(s).`);
       fetchGymOwners();
-    } catch (err) {
+    } catch {
       showToast('Error during batch approval.', 'error');
     }
   };
@@ -216,7 +208,7 @@ const ViewOwners = () => {
       }
       showToast(`Rejected ${successCount} gym owner(s).`);
       fetchGymOwners();
-    } catch (err) {
+    } catch {
       showToast('Error during batch rejection.', 'error');
     }
   };
@@ -259,9 +251,6 @@ const ViewOwners = () => {
     const rejected = owners.filter((o) => o.status === 'Rejected').length;
     return { total, pending, approved, rejected };
   }, [owners, pagination.totalCount]);
-
-  const selectedCount = owners.filter((o) => o.selected).length;
-  const allSelected = owners.length > 0 && owners.every((o) => o.selected);
 
   const startRecord = pagination.totalCount === 0 ? 0 : (pagination.pageNumber - 1) * pagination.pageSize + 1;
   const endRecord = Math.min(pagination.pageNumber * pagination.pageSize, pagination.totalCount);
