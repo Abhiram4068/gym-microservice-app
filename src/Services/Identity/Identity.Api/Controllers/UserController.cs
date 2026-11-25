@@ -227,6 +227,15 @@ public class UserController : ApiControllerBase
         }
 
         var result = await _gymOwnerService.RejectGymOwnerAsync(id, request, cancellationToken);
-        return FromResult(result);
+        if (!result.Success)
+        {
+            if (result.Message != null && result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(result);
+            }
+            return BadRequest(result);
+        }
+
+        return Ok(result);
     }
 }

@@ -1,4 +1,4 @@
-﻿@layer base {
+@layer base {
   * {
     box-sizing: border-box;
     margin: 0;
@@ -10,4 +10,29 @@
     background-color: #edf2f7;
     color: #161b22;
   }
+}
+
+/* Hide scrollbars completely while keeping smooth scrolling */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+}
+
+html,
+body,
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+}
+
+.no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
