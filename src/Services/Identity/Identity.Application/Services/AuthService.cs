@@ -209,4 +209,58 @@ public class AuthService : IAuthService
 
         return ApiResponse<GymLoginResponseDto>.Ok(responseDto, "Login successful.");
     }
+
+    public async Task<ApiResponse<RefreshTokenResponseDto>> RefreshTokenAsync(RefreshTokenRequestDto request, CancellationToken cancellationToken = default)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return ApiResponse<RefreshTokenResponseDto>.Fail("Refresh token is required.");
+        }
+
+        var storedToken = await _refreshTokenRepository.GetByTokenAsync(request.RefreshToken.Trim(), cancellationToken);
+        if (storedToken == null)
+        {
+            _logger.LogWarning("Refresh token attempt failed: Token not found.");
+            return ApiResponse<RefreshTokenResponseDto>.Fail("Invalid refresh token.");
+        }
+
+        if (storedToken.IsRevoked)
+        {
+            // Token reuse detected — revoke all active tokens for this user
+            _logger.LogWarning("Revoked refresh token reuse detected for User {UserId}. Revoking all sessions.", storedToken.UserId);
+            await _refreshTokenRepository.RevokeUserTokensAsync(storedToken.UserId, cancellationToken);
+            return ApiResponse<RefreshTokenResponseDto>.Fail("Refresh token has been revoked.");
+        }
+
+        if (storedToken.ExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogInformation("Refresh token expired for User {UserId}.", storedToken.UserId);
+            return ApiResponse<RefreshTokenResponseDto>.Fail("Refresh token has expired. Please log in again.");
+        }
+
+        var user = storedToken.User;
+        if (user == null || user.Status != UserStatus.Active)
+        {
+            _logger.LogWarning("Refresh token rejected: User {UserId} is missing or not active.", storedToken.UserId);
+            return ApiResponse<RefreshTokenResponseDto>.Fail("Account is not active. Please contact your administrator.");
+        }
+
+        // Rotate tokens
+        var (accessToken, expiresIn) = _jwtTokenGenerator.GenerateAccessToken(user);
+        var newRefreshToken = _jwtTokenGenerator.GenerateRefreshToken(user);
+
+        storedToken.IsRevoked = true;
+        storedToken.ReplacedByToken = newRefreshToken.Token;
+        await _refreshTokenRepository.UpdateAsync(storedToken, cancellationToken);
+        await _refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
+
+        _logger.LogInformation("Access token refreshed for User {UserId}.", user.Id);
+
+        return ApiResponse<RefreshTokenResponseDto>.Ok(new RefreshTokenResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = newRefreshToken.Token,
+            ExpiresIn = expiresIn
+        }, "Token refreshed successfully.");
+    }
 }

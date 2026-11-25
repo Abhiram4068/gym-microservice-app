@@ -59,4 +59,19 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(ApiResponse<RefreshTokenResponseDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<RefreshTokenResponseDto>), 401)]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto request, CancellationToken cancellationToken)
+    {
+        var result = await _authService.RefreshTokenAsync(request, cancellationToken);
+
+        if (!result.Success)
+        {
+            return Unauthorized(result);
+        }
+
+        return Ok(result);
+    }
 }

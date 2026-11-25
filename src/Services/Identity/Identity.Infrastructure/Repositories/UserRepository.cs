@@ -48,7 +48,7 @@ public class UserRepository : IUserRepository
     public async Task<List<User>> GetReceptionistsByGymIdAsync(Guid gymId, CancellationToken cancellationToken = default)
     {
         return await _context.Users
-            .Where(u => u.GymId == gymId && u.Role == UserRole.Receptionist)
+         .Where(u => u.GymId == gymId && u.Role == UserRole.Receptionist && u.Status != UserStatus.Deleted)   
             .OrderByDescending(u => u.CreatedAt)
             .ToListAsync(cancellationToken);
     }
