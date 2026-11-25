@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import SuperAdminNavbar from '../../components/superadmin/SuperAdminNavbar';
 import SuperAdminSidebar from '../../components/superadmin/SuperAdminSidebar';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { getUserData } from '../../utils/tokenStorage';
 import { authApi } from '../../api/auth';
 

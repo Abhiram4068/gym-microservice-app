@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const formatDateTime = (isoString) => {
   if (!isoString) return '—';
@@ -13,7 +13,7 @@ const formatDateTime = (isoString) => {
   });
 };
 
-const ViewReceptionistModal = ({
+const ViewReceptionistModalContent = ({
   receptionist,
   gymName,
   isDetailLoading,
@@ -26,29 +26,13 @@ const ViewReceptionistModal = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: ''
+    firstName: receptionist.firstName || '',
+    lastName: receptionist.lastName || ''
   });
   const [editError, setEditError] = useState('');
   const [editFieldErrors, setEditFieldErrors] = useState([]);
 
   useEffect(() => {
-    if (!receptionist) {
-      setIsEditing(false);
-      setEditError('');
-      setEditFieldErrors([]);
-      return;
-    }
-    setFormData({
-      firstName: receptionist.firstName || '',
-      lastName: receptionist.lastName || ''
-    });
-    setEditError('');
-    setEditFieldErrors([]);
-  }, [receptionist?.id, receptionist?.firstName, receptionist?.lastName]);
-
-  useEffect(() => {
-    if (!receptionist) return undefined;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         if (isEditing && busyAction?.type !== 'update') {
@@ -62,9 +46,7 @@ const ViewReceptionistModal = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [receptionist, isEditing, busyAction, onClose]);
-
-  if (!receptionist) return null;
+  }, [isEditing, busyAction, onClose]);
 
   const isActive = receptionist.status === 1;
   const isRowBusy = busyAction?.id === receptionist.id;
@@ -594,6 +576,11 @@ const ViewReceptionistModal = ({
       </div>
     </div>
   );
+};
+
+const ViewReceptionistModal = (props) => {
+  if (!props.receptionist) return null;
+  return <ViewReceptionistModalContent key={props.receptionist.id} {...props} />;
 };
 
 export default ViewReceptionistModal;

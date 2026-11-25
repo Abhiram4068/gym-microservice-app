@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useToast } from '../../components/common/Toast';
+import { useToast } from '../../components/common/useToast';
 import { userApi } from '../../api/user';
 import { getUserData } from '../../utils/tokenStorage';
 import ViewReceptionistModal from '../../components/gymowner/ViewReceptionistModal';
@@ -49,7 +49,10 @@ const ManageReceptionists = () => {
   };
 
   useEffect(() => {
-    fetchReceptionists();
+    const timer = setTimeout(() => {
+      fetchReceptionists();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleStatusChange = async (rec, targetAction) => {

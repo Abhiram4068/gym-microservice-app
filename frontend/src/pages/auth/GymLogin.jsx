@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { authApi } from "../../api/auth";
 import {
@@ -16,15 +16,15 @@ const GymLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isPendingApproval, setIsPendingApproval] = useState(false);
-  const [notification, setNotification] = useState("");
+  const [notificationDismissed, setNotificationDismissed] = useState(false);
 
-  // Check if session expired or user already logged in as gym owner/staff
+  const isSessionExpired = new URLSearchParams(location.search).get("expired") === "true";
+  const notification = !notificationDismissed && isSessionExpired
+    ? "Your session has expired. Please log in again."
+    : "";
+
+  // Redirect if already logged in as gym owner/staff
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get("expired") === "true") {
-      setNotification("Your session has expired. Please log in again.");
-    }
-
     if (isAuthenticated()) {
       const role = getUserRole();
       if (role === UserRole.GymOwner) {
@@ -35,13 +35,13 @@ const GymLogin = () => {
         navigate("/trainer/dashboard", { replace: true });
       }
     }
-  }, [location, navigate]);
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setIsPendingApproval(false);
-    setNotification("");
+    setNotificationDismissed(true);
     setIsLoading(true);
 
     try {

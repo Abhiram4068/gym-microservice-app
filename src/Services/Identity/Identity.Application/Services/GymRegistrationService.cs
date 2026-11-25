@@ -16,6 +16,7 @@ namespace Identity.Application.Services;
 
 public class GymRegistrationService : IGymRegistrationService
 {
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IGymRepository _gymRepository;
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -23,12 +24,14 @@ public class GymRegistrationService : IGymRegistrationService
     private readonly ILogger<GymRegistrationService> _logger;
 
     public GymRegistrationService(
+        IUnitOfWork unitOfWork,
         IGymRepository gymRepository,
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IValidator<GymRegisterRequestDto> validator,
         ILogger<GymRegistrationService> logger)
     {
+        _unitOfWork = unitOfWork;
         _gymRepository = gymRepository;
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -82,10 +85,10 @@ public class GymRegistrationService : IGymRegistrationService
         if (validationErrors.Count > 0)
         {
             _logger.LogWarning("Gym registration rejected due to duplicate parameters: {Errors}", string.Join(", ", validationErrors));
-            return ApiResponse<GymRegisterResponseDto>.Fail("Registration details already exist.", validationErrors);
+            return ApiResponse<GymRegisterResponseDto>.Conflict("Registration details already exist.", validationErrors);
         }
 
-        // 3. Create Gym Record (Status = Pending)
+        // 3. Create Gym + Owner User atomically
         var gym = new Gym
         {
             Id = Guid.NewGuid(),
@@ -102,9 +105,6 @@ public class GymRegistrationService : IGymRegistrationService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _gymRepository.AddAsync(gym, cancellationToken);
-
-        // 4. Create User Record for GymOwner (Connected via GymId, Status = Pending)
         var passwordHash = _passwordHasher.HashPassword(request.Password);
         var ownerUser = new User
         {
@@ -121,7 +121,11 @@ public class GymRegistrationService : IGymRegistrationService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _userRepository.AddAsync(ownerUser, cancellationToken);
+        await _unitOfWork.ExecuteInTransactionAsync(async ct =>
+        {
+            await _gymRepository.AddAsync(gym, ct);
+            await _userRepository.AddAsync(ownerUser, ct);
+        }, cancellationToken);
 
         _logger.LogInformation("Successfully registered Gym {GymName} ({GymId}) with Owner {OwnerEmail} ({OwnerId}) in Pending state",
             gym.Name, gym.Id, ownerUser.Email, ownerUser.Id);
