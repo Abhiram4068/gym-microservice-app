@@ -38,4 +38,7 @@ public class Gym
 
     // Navigation property: One gym has many users (GymOwner, Receptionist, Trainer)
     public ICollection<User> Users { get; set; } = new List<User>();
+
+    // Navigation property: One gym has many members
+    public ICollection<Member> Members { get; set; } = new List<Member>();
 }
