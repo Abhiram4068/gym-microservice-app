@@ -1,19 +1,12 @@
-﻿import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-
-let navigateRef = null;
-
-export const globalNavigate = (to, options) => {
-  if (navigateRef) {
-    navigateRef(to, options);
-  }
-};
+import { useNavigate } from 'react-router-dom';
+import { setGlobalNavigate } from '../../utils/navigation';
 
 const GlobalNavigate = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigateRef = navigate;
+    setGlobalNavigate(navigate);
   }, [navigate]);
 
   return null;

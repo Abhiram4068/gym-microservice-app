@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useToast } from '../../components/common/Toast';
+import { useToast } from '../../components/common/useToast';
 import { userApi } from '../../api/user';
 import { UserStatus } from '../../types/entities';
 
@@ -69,7 +69,10 @@ const OwnerDetails = () => {
   }, [id]);
 
   useEffect(() => {
-    fetchDetails();
+    const timer = setTimeout(() => {
+      fetchDetails();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchDetails]);
 
   const copyToClipboard = (text, label) => {

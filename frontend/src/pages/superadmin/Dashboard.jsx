@@ -1,6 +1,3 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-
 const statsData = [
   {
     label: 'Total Revenue',
@@ -61,60 +58,6 @@ const statsData = [
     value: '13',
     bgColor: 'bg-[#fefaf7]', // pale soft orange
     borderColor: 'border-[#faeee5]'
-  }
-];
-
-const recentTenants = [
-  {
-    name: 'CloudMatrix Technologies Pvt Ltd',
-    plan: 'Free Plan',
-    status: 'Active',
-    mrr: '₹ 0'
-  },
-  {
-    name: 'NextGen Business Solutions Pvt Ltd',
-    plan: 'Business Plan',
-    status: 'Active',
-    mrr: '₹ 4999'
-  },
-  {
-    name: 'Acme Software Solutions Pvt Ltd',
-    plan: 'Enterprise Plan',
-    status: 'Active',
-    mrr: '₹ 7999'
-  },
-  {
-    name: 'Vertex Consulting Services Pvt Ltd',
-    plan: 'Free Plan',
-    status: 'Active',
-    mrr: '₹ 0'
-  }
-];
-
-const activePlans = [
-  {
-    name: 'Free Plan',
-    billing: 'Monthly/Yearly',
-    tenants: 2,
-    price: '$0'
-  },
-  {
-    name: 'Professional Plan',
-    billing: 'Monthly/Yearly',
-    tenants: 0,
-    price: '$2999'
-  },
-  {
-    name: 'Business Plan',
-    billing: 'Monthly/Yearly',
-    tenants: 2,
-    price: '$4999'
-  },
-  {
-    name: 'Enterprise Plan',
-    billing: 'Monthly/Yearly',
-    tenants: 1,
-    price: '$7999'
   }
 ];
 

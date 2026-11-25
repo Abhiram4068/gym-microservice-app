@@ -47,7 +47,7 @@ public class UserService : IUserService
         if (!validationResult.IsValid)
         {
             var errors = validationResult.Errors.ConvertAll(e => e.ErrorMessage);
-            return ApiResponse<ReceptionistDto>.Fail("Validation failed.", errors);
+            return ApiResponse<ReceptionistDto>.ValidationFail("Validation failed.", errors);
         }
 
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
@@ -56,13 +56,13 @@ public class UserService : IUserService
         // 2. Uniqueness checks
         if (await _userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken))
         {
-            return ApiResponse<ReceptionistDto>.Fail($"A user with email '{request.Email}' already exists.");
+            return ApiResponse<ReceptionistDto>.Conflict($"A user with email '{request.Email}' already exists.");
         }
 
         if (!string.IsNullOrWhiteSpace(normalizedPhone) &&
             await _userRepository.ExistsByPhoneNumberAsync(normalizedPhone, cancellationToken))
         {
-            return ApiResponse<ReceptionistDto>.Fail($"A user with phone number '{request.PhoneNumber}' already exists.");
+            return ApiResponse<ReceptionistDto>.Conflict($"A user with phone number '{request.PhoneNumber}' already exists.");
         }
 
         // 3. Hash Password & Construct User Entity
@@ -108,7 +108,7 @@ public class UserService : IUserService
         var user = await _userRepository.GetByIdAndGymIdAsync(userId, gymId, cancellationToken);
         if (user == null || user.Status == UserStatus.Deleted || user.Role != UserRole.Receptionist)
         {
-            return ApiResponse<ReceptionistDto>.Fail("Receptionist not found in your gym.");
+            return ApiResponse<ReceptionistDto>.NotFound("Receptionist not found in your gym.");
         }
 
         return ApiResponse<ReceptionistDto>.Ok(MapToReceptionistDto(user));
@@ -131,7 +131,7 @@ public class UserService : IUserService
         var user = await _userRepository.GetByIdAndGymIdAsync(userId, gymId, cancellationToken);
         if (user == null || user.Status == UserStatus.Deleted || user.Role != UserRole.Receptionist)
         {
-            return ApiResponse<ReceptionistDto>.Fail("Receptionist not found in your gym.");
+            return ApiResponse<ReceptionistDto>.NotFound("Receptionist not found in your gym.");
         }
 
         user.FirstName = request.FirstName.Trim();
@@ -153,7 +153,7 @@ public class UserService : IUserService
         var user = await _userRepository.GetByIdAndGymIdAsync(userId, gymId, cancellationToken);
         if (user == null || user.Status == UserStatus.Deleted || user.Role != UserRole.Receptionist)
         {
-            return ApiResponse<ReceptionistDto>.Fail("Receptionist not found in your gym.");
+            return ApiResponse<ReceptionistDto>.NotFound("Receptionist not found in your gym.");
         }
 
         // Toggle Active <-> Inactive
@@ -176,7 +176,7 @@ public class UserService : IUserService
         var user = await _userRepository.GetByIdAndGymIdAsync(userId, gymId, cancellationToken);
         if (user == null || user.Status == UserStatus.Deleted || user.Role != UserRole.Receptionist)
         {
-            return ApiResponse<bool>.Fail("Receptionist not found in your gym.");
+            return ApiResponse<bool>.NotFound("Receptionist not found in your gym.");
         }
 
         user.Status = UserStatus.Deleted;

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using GymPlatform.Common.Responses;
 using Identity.Application.DTOs.Member;
+using GymPlatform.Common.Security;
 using Identity.Application.DTOs.Receptionist;
 using Identity.Application.DTOs.Request;
 using Identity.Application.DTOs.Response;
@@ -16,7 +16,7 @@ namespace Identity.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController : ControllerBase
+public class UserController : ApiControllerBase
 {
     private readonly IGymRegistrationService _gymRegistrationService;
     private readonly IUserService _userService;
@@ -35,30 +35,16 @@ public class UserController : ControllerBase
         _memberService = memberService;
     }
 
-    /// <summary>
-    /// Registers a new Gym and its corresponding Gym Owner.
-    /// Gym is saved in Gyms table and Owner in Users table (Status: Pending, Role: GymOwner).
-    /// </summary>
-    /// <param name="request">Gym and Owner registration details</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     [HttpPost("gym-register")]
     [ProducesResponseType(typeof(ApiResponse<GymRegisterResponseDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<GymRegisterResponseDto>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<GymRegisterResponseDto>), 409)]
     public async Task<IActionResult> GymRegister([FromBody] GymRegisterRequestDto request, CancellationToken cancellationToken)
     {
         var result = await _gymRegistrationService.RegisterGymAsync(request, cancellationToken);
-
-        if (!result.Success)
-        {
-            return BadRequest(result);
-        }
-
-        return Ok(result);
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Creates a new Receptionist staff account for the authenticated Gym Owner's gym.
-    /// </summary>
     [HttpPost("receptionist")]
     [Authorize(Roles = "GymOwner")]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
@@ -68,30 +54,17 @@ public class UserController : ControllerBase
         [FromBody] CreateReceptionistRequestDto request,
         CancellationToken cancellationToken)
     {
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<ReceptionistDto>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<ReceptionistDto>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
-        var ownerId = GetCurrentUserId();
-        var result = await _userService.CreateReceptionistAsync(ownerId, gymId, request, cancellationToken);
-
-        if (!result.Success)
-        {
-            return BadRequest(result);
-        }
-
-        return Ok(result);
+        var result = await _userService.CreateReceptionistAsync(User.GetUserId(), gymId, request, cancellationToken);
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Retrieves a paginated, sorted, filterable, and searchable list of Gym Owners.
-    /// Accessible only by SuperAdmin (Admin / Role 1).
-    /// </summary>
-    /// <param name="request">Pagination, sort, filter, and search query parameters</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     [HttpGet("gymowners")]
-    [Authorize(Roles = "SuperAdmin,1")]
+    [Authorize(Roles = "SuperAdmin")]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 200)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 401)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 403)]
@@ -100,18 +73,11 @@ public class UserController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _gymOwnerService.GetGymOwnersAsync(request, cancellationToken);
-        return Ok(result);
-        
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Retrieves full details of a specific Gym Owner and their connected Gym by Owner ID.
-    /// Accessible only by SuperAdmin (Admin / Role 1).
-    /// </summary>
-    /// <param name="id">The unique GUID of the Gym Owner</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     [HttpGet("gymowners/{id:guid}")]
-    [Authorize(Roles = "SuperAdmin,1")]
+    [Authorize(Roles = "SuperAdmin")]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 400)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 404)]
@@ -121,39 +87,28 @@ public class UserController : ControllerBase
     {
         if (id == Guid.Empty)
         {
-            return BadRequest(ApiResponse<GymOwnerDetailDto>.Fail("A valid Gym Owner ID must be provided."));
+            return BadRequest(ApiResponse<GymOwnerDetailDto>.ValidationFail("A valid Gym Owner ID must be provided."));
         }
 
         var result = await _gymOwnerService.GetGymOwnerByIdAsync(id, cancellationToken);
-        if (!result.Success)
-        {
-            return NotFound(result);
-        }
-
-        return Ok(result);
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Lists all receptionists belonging to the authenticated Gym Owner's gym.
-    /// </summary>
     [HttpGet("receptionists")]
     [Authorize(Roles = "GymOwner")]
     [ProducesResponseType(typeof(ApiResponse<List<ReceptionistDto>>), 200)]
     [ProducesResponseType(401)]
     public async Task<IActionResult> GetReceptionists(CancellationToken cancellationToken)
     {
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<List<ReceptionistDto>>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<List<ReceptionistDto>>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
         var result = await _userService.GetReceptionistsByGymIdAsync(gymId, cancellationToken);
-        return Ok(result);
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Retrieves details of a specific receptionist belonging to the authenticated Gym Owner's gym.
-    /// </summary>
     [HttpGet("receptionists/{id:guid}")]
     [Authorize(Roles = "GymOwner")]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
@@ -166,26 +121,18 @@ public class UserController : ControllerBase
     {
         if (id == Guid.Empty)
         {
-            return BadRequest(ApiResponse<ReceptionistDto>.Fail("A valid Receptionist ID must be provided."));
+            return BadRequest(ApiResponse<ReceptionistDto>.ValidationFail("A valid Receptionist ID must be provided."));
         }
 
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<ReceptionistDto>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<ReceptionistDto>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
         var result = await _userService.GetReceptionistByIdAsync(gymId, id, cancellationToken);
-        if (!result.Success)
-        {
-            return NotFound(result);
-        }
-
-        return Ok(result);
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Updates details of an existing receptionist in the authenticated Gym Owner's gym.
-    /// </summary>
     [HttpPut("receptionists/{id:guid}")]
     [Authorize(Roles = "GymOwner")]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
@@ -199,38 +146,21 @@ public class UserController : ControllerBase
     {
         if (id == Guid.Empty)
         {
-            return BadRequest(ApiResponse<ReceptionistDto>.Fail("A valid Receptionist ID must be provided."));
+            return BadRequest(ApiResponse<ReceptionistDto>.ValidationFail("A valid Receptionist ID must be provided."));
         }
 
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<ReceptionistDto>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<ReceptionistDto>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
-        var ownerId = GetCurrentUserId();
-        var result = await _userService.UpdateReceptionistAsync(ownerId, gymId, id, request, cancellationToken);
-
-        if (!result.Success)
-        {
-            if (result.Message != null && result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
-            {
-                return NotFound(result);
-            }
-            return BadRequest(result);
-        }
-
-        return Ok(result);
+        var result = await _userService.UpdateReceptionistAsync(User.GetUserId(), gymId, id, request, cancellationToken);
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Approves a pending or inactive gym owner and activates their account and gym registration.
-    /// Accessible only by SuperAdmin (Admin / Role 1).
-    /// </summary>
-    /// <param name="id">The unique GUID of the Gym Owner or Gym</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     [HttpPost("gymowners/{id:guid}/approve")]
     [HttpPut("gymowners/{id:guid}/approve")]
-    [Authorize(Roles = "SuperAdmin,1")]
+    [Authorize(Roles = "SuperAdmin")]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 400)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 404)]
@@ -240,26 +170,13 @@ public class UserController : ControllerBase
     {
         if (id == Guid.Empty)
         {
-            return BadRequest(ApiResponse<GymOwnerDetailDto>.Fail("A valid Gym Owner ID must be provided."));
+            return BadRequest(ApiResponse<GymOwnerDetailDto>.ValidationFail("A valid Gym Owner ID must be provided."));
         }
 
         var result = await _gymOwnerService.ApproveGymOwnerAsync(id, cancellationToken);
-        if (!result.Success)
-        {
-            if (result.Message != null && result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
-            {
-                return NotFound(result);
-            }
-            return BadRequest(result);
-        }
-
-        return Ok(result);
+        return FromResult(result);
     }
-    
 
-    /// <summary>
-    /// Toggles active/inactive status of a staff user in the authenticated gym.
-    /// </summary>
     [HttpPatch("{id:guid}/status")]
     [Authorize(Roles = "GymOwner")]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
@@ -269,28 +186,15 @@ public class UserController : ControllerBase
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<ReceptionistDto>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<ReceptionistDto>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
         var result = await _userService.ToggleUserStatusAsync(gymId, id, cancellationToken);
-
-        if (!result.Success)
-        {
-            if (result.Message != null && result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
-            {
-                return NotFound(result);
-            }
-            return BadRequest(result);
-        }
-
-        return Ok(result);
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Soft-deletes a receptionist in the authenticated gym.
-    /// </summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "GymOwner")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
@@ -301,34 +205,18 @@ public class UserController : ControllerBase
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<bool>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<bool>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
         var result = await _userService.DeleteReceptionistAsync(gymId, id, cancellationToken);
-        if (!result.Success)
-        {
-            if (result.Message != null && result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
-            {
-                return NotFound(result);
-            }
-            return BadRequest(result);
-        }
-
-        return Ok(result);
+        return FromResult(result);
     }
 
-    /// <summary>
-    /// Rejects a gym owner's application with an optional rejection reason.
-    /// Accessible only by SuperAdmin (Admin / Role 1).
-    /// </summary>
-    /// <param name="id">The unique GUID of the Gym Owner or Gym</param>
-    /// <param name="request">Optional payload containing the rejection reason</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     [HttpPost("gymowners/{id:guid}/reject")]
     [HttpPut("gymowners/{id:guid}/reject")]
-    [Authorize(Roles = "SuperAdmin,1")]
+    [Authorize(Roles = "SuperAdmin")]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 400)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 404)]
@@ -339,7 +227,7 @@ public class UserController : ControllerBase
     {
         if (id == Guid.Empty)
         {
-            return BadRequest(ApiResponse<GymOwnerDetailDto>.Fail("A valid Gym Owner ID must be provided."));
+            return BadRequest(ApiResponse<GymOwnerDetailDto>.ValidationFail("A valid Gym Owner ID must be provided."));
         }
 
         var result = await _gymOwnerService.RejectGymOwnerAsync(id, request, cancellationToken);

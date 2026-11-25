@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { authApi } from "../../api/auth";
 import {
@@ -15,27 +15,27 @@ const SuperAdminLogin = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [notification, setNotification] = useState("");
+  const [notificationDismissed, setNotificationDismissed] = useState(false);
 
-  // Check if user is already logged in or session expired query param present
+  const isSessionExpired = new URLSearchParams(location.search).get("expired") === "true";
+  const notification = !notificationDismissed && isSessionExpired
+    ? "Your session has expired. Please log in again."
+    : "";
+
+  // Redirect if already logged in as SuperAdmin
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get("expired") === "true") {
-      setNotification("Your session has expired. Please log in again.");
-    }
-
     if (isAuthenticated()) {
       const role = getUserRole();
       if (role === UserRole.SuperAdmin) {
         navigate("/admin/dashboard", { replace: true });
       }
     }
-  }, [location, navigate]);
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setNotification("");
+    setNotificationDismissed(true);
     setIsLoading(true);
 
     try {

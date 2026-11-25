@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useToast } from '../../components/common/Toast';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useToast } from '../../components/common/useToast';
 import { authApi } from '../../api/auth';
 
 const GymOwnerRegister = () => {
-  const navigate = useNavigate();
   const { showToast } = useToast();
 
   const [step, setStep] = useState(1);

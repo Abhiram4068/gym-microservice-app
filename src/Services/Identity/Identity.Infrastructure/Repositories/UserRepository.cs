@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GymPlatform.Common.Pagination;
 using Identity.Application.Interfaces.Repositories;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
@@ -136,8 +137,7 @@ public class UserRepository : IUserRepository
         };
 
         // 5. Pagination
-        var page = pageNumber < 1 ? 1 : pageNumber;
-        var size = pageSize < 1 ? 10 : (pageSize > 100 ? 100 : pageSize);
+        var (page, size) = PaginationHelper.Normalize(pageNumber, pageSize);
 
         var items = await query
             .AsNoTracking()

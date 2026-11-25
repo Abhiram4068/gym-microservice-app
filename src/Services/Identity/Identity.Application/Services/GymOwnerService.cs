@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GymPlatform.Common.Pagination;
 using GymPlatform.Common.Responses;
 using Identity.Application.DTOs.Request;
 using Identity.Application.DTOs.Response;
@@ -28,8 +29,7 @@ public class GymOwnerService : IGymOwnerService
         GetGymOwnersRequestDto request,
         CancellationToken cancellationToken = default)
     {
-        var pageNumber = request.PageNumber < 1 ? 1 : request.PageNumber;
-        var pageSize = request.PageSize < 1 ? 10 : (request.PageSize > 100 ? 100 : request.PageSize);
+        var (pageNumber, pageSize) = PaginationHelper.Normalize(request.PageNumber, request.PageSize);
 
         var (users, totalCount) = await _userRepository.GetGymOwnersPagedAsync(
             request.Search,
@@ -81,7 +81,7 @@ public class GymOwnerService : IGymOwnerService
         if (user == null)
         {
             _logger.LogWarning("Gym owner with ID {OwnerId} was not found", id);
-            return ApiResponse<GymOwnerDetailDto>.Fail($"Gym owner with ID '{id}' was not found.");
+            return ApiResponse<GymOwnerDetailDto>.NotFound($"Gym owner with ID '{id}' was not found.");
         }
 
         var detailDto = MapToDetailDto(user);
@@ -102,12 +102,12 @@ public class GymOwnerService : IGymOwnerService
         if (user == null)
         {
             _logger.LogWarning("Gym owner with ID {OwnerId} was not found for approval", id);
-            return ApiResponse<GymOwnerDetailDto>.Fail($"Gym owner with ID '{id}' was not found.");
+            return ApiResponse<GymOwnerDetailDto>.NotFound($"Gym owner with ID '{id}' was not found.");
         }
 
         if (user.Status == UserStatus.Active)
         {
-            return ApiResponse<GymOwnerDetailDto>.Fail("This gym owner is already approved and active.");
+            return ApiResponse<GymOwnerDetailDto>.Conflict("This gym owner is already approved and active.");
         }
 
         if (user.Status == UserStatus.Deleted)
@@ -146,12 +146,12 @@ public class GymOwnerService : IGymOwnerService
         if (user == null)
         {
             _logger.LogWarning("Gym owner with ID {OwnerId} was not found for rejection", id);
-            return ApiResponse<GymOwnerDetailDto>.Fail($"Gym owner with ID '{id}' was not found.");
+            return ApiResponse<GymOwnerDetailDto>.NotFound($"Gym owner with ID '{id}' was not found.");
         }
 
         if (user.Status == UserStatus.Rejected)
         {
-            return ApiResponse<GymOwnerDetailDto>.Fail("This gym owner application is already rejected.");
+            return ApiResponse<GymOwnerDetailDto>.Conflict("This gym owner application is already rejected.");
         }
 
         if (user.Status == UserStatus.Deleted)
