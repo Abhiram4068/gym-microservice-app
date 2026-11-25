@@ -1,6 +1,78 @@
-import { getToken, clearSession } from '../utils/tokenStorage';
+import {
+  getToken,
+  setToken,
+  getRefreshToken,
+  setRefreshToken,
+  getUserRole,
+  UserRole,
+  clearSession
+} from '../utils/tokenStorage';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
+let refreshPromise = null;
+
+const isAuthEndpoint = (endpoint) =>
+  endpoint.includes('/auth/admin-login') ||
+  endpoint.includes('/auth/gym-login') ||
+  endpoint.includes('/auth/refresh');
+
+const redirectToLogin = () => {
+  const role = getUserRole();
+  const isSuperAdminContext =
+    role === UserRole.SuperAdmin ||
+    (typeof window !== 'undefined' && window.location.pathname.startsWith('/superadmin'));
+
+  clearSession();
+
+  if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+    window.location.href = isSuperAdminContext
+      ? '/superadmin/login?expired=true'
+      : '/login?expired=true';
+  }
+};
+
+const refreshAccessToken = async () => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    return null;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const payload = await response.json();
+      const tokenData = payload?.data;
+      if (payload?.success && tokenData?.accessToken) {
+        setToken(tokenData.accessToken);
+        if (tokenData.refreshToken) {
+          setRefreshToken(tokenData.refreshToken);
+        }
+        return tokenData.accessToken;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+};
 
 const axiosClient = {
   baseURL: BASE_URL,
@@ -29,9 +101,27 @@ const axiosClient = {
     }
 
     try {
-      const response = await fetch(url, config);
-      let data = null;
+      let response = await fetch(url, config);
 
+      // On 401 for protected endpoints, try refreshing the access token once and retry
+      if (response.status === 401 && !isAuthEndpoint(endpoint) && !options._retried) {
+        const newAccessToken = await refreshAccessToken();
+
+        if (newAccessToken) {
+          const retryConfig = {
+            ...config,
+            headers: {
+              ...headers,
+              Authorization: `Bearer ${newAccessToken}`
+            }
+          };
+          response = await fetch(url, retryConfig);
+        } else {
+          redirectToLogin();
+        }
+      }
+
+      let data = null;
       try {
         data = await response.json();
       } catch {
@@ -39,16 +129,8 @@ const axiosClient = {
       }
 
       if (!response.ok) {
-        // Handle 401 Unauthorized (exclude login endpoints so bad credentials show inline error)
-        if (
-          response.status === 401 &&
-          !endpoint.includes('/auth/admin-login') &&
-          !endpoint.includes('/auth/gym-login')
-        ) {
-          clearSession();
-          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-            window.location.href = '/login?expired=true';
-          }
+        if (response.status === 401 && !isAuthEndpoint(endpoint)) {
+          redirectToLogin();
         }
 
         const error = new Error(
@@ -109,4 +191,3 @@ const axiosClient = {
 };
 
 export default axiosClient;
-
