@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getUserData } from '../../utils/tokenStorage';
 import { getInitials } from '../../utils/initials';
-import { useToast } from '../../components/common/Toast';
-import { userApi } from '../../api/user';
+import { useToast } from '../../components/common/useToast';
+import { membersApi } from '../../api/members';
 
 const ReceptionistDashboard = () => {
   const { showToast } = useToast();
@@ -48,7 +48,7 @@ const ReceptionistDashboard = () => {
         params.status = 2;
       }
 
-      const res = await userApi.getMembers(params);
+      const res = await membersApi.getMembers(params);
       if (res.success && res.data) {
         setMembers(res.data.items || []);
         setTotalCount(res.data.totalCount || 0);

@@ -1,4 +1,4 @@
-namespace Identity.Domain.Enums;
+namespace Members.Domain.Enums;
 
 public enum Gender
 {
@@ -7,3 +7,4 @@ public enum Gender
     Other = 3,
     PreferNotToSay = 4
 }
+

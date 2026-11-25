@@ -1,15 +1,14 @@
 using System;
-using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using GymPlatform.Common.Responses;
-using Identity.Application.DTOs.Member;
-using Identity.Application.Interfaces.Services;
+using GymPlatform.Common.Security;
+using Members.Application.DTOs.Member;
+using Members.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Identity.Api.Controllers;
+namespace Members.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -23,34 +22,36 @@ public class MembersController : ControllerBase
     }
 
     /// <summary>
-    /// Creates a new customer / member for the receptionist's gym.
+    /// Creates a new member for the authenticated receptionist or gym owner's gym.
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Receptionist,GymOwner,2,3")]
-    [ProducesResponseType(typeof(ApiResponse<MemberDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<MemberDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<MemberDto>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<MemberDto>), 409)]
     [ProducesResponseType(401)]
     public async Task<IActionResult> CreateMember(
         [FromBody] CreateMemberRequestDto request,
         CancellationToken cancellationToken)
     {
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<MemberDto>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<MemberDto>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = User.GetUserId();
         var result = await _memberService.CreateMemberAsync(gymId, currentUserId, request, cancellationToken);
+
         if (!result.Success)
         {
-            return BadRequest(result);
+            return MapError(result);
         }
 
-        return Ok(result);
+        return CreatedAtAction(nameof(GetMemberById), new { id = result.Data!.Id }, result);
     }
 
     /// <summary>
-    /// Retrieves a paginated, sorted, filterable, and searchable list of members belonging to the authenticated receptionist's gym.
+    /// Retrieves a paginated, sorted, filterable, and searchable list of members belonging to the authenticated user's gym.
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "Receptionist,GymOwner,2,3")]
@@ -60,9 +61,9 @@ public class MembersController : ControllerBase
         [FromQuery] GetMembersRequestDto request,
         CancellationToken cancellationToken)
     {
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<PagedResult<MemberDto>>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<PagedResult<MemberDto>>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
         var result = await _memberService.GetMembersByGymIdAsync(gymId, request, cancellationToken);
@@ -70,42 +71,35 @@ public class MembersController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a single member by ID.
+    /// Retrieves a single member by ID for the authenticated user's gym.
     /// </summary>
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "Receptionist,GymOwner,2,3")]
     [ProducesResponseType(typeof(ApiResponse<MemberDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<MemberDto>), 404)]
     [ProducesResponseType(401)]
-    [ProducesResponseType(404)]
     public async Task<IActionResult> GetMemberById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        if (!TryGetGymId(out var gymId))
+        if (!User.TryGetGymId(out var gymId))
         {
-            return Unauthorized(ApiResponse<MemberDto>.Fail("Missing or invalid gym identity claim."));
+            return Unauthorized(ApiResponse<MemberDto>.Unauthorized("Missing or invalid gym identity claim."));
         }
 
         var result = await _memberService.GetMemberByIdAsync(gymId, id, cancellationToken);
         if (!result.Success)
         {
-            return NotFound(result);
+            return MapError(result);
         }
 
         return Ok(result);
     }
 
-    private bool TryGetGymId(out Guid gymId)
+    private IActionResult MapError<T>(ApiResponse<T> result) => result.ErrorType switch
     {
-        gymId = Guid.Empty;
-        var claim = User.FindFirst("gymId")?.Value 
-                    ?? User.FindFirst("GymId")?.Value
-                    ?? System.Linq.Enumerable.FirstOrDefault(User.Claims, c => c.Type.Equals("gymId", StringComparison.OrdinalIgnoreCase))?.Value;
-        return Guid.TryParse(claim, out gymId);
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                    ?? User.FindFirst("sub")?.Value;
-        return Guid.TryParse(claim, out var id) ? id : Guid.Empty;
-    }
+        ErrorType.NotFound => NotFound(result),
+        ErrorType.Conflict => Conflict(result),
+        ErrorType.Unauthorized => Unauthorized(result),
+        ErrorType.Forbidden => Forbid(),
+        _ => BadRequest(result)
+    };
 }

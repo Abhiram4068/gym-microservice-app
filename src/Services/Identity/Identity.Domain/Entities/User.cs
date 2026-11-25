@@ -44,9 +44,6 @@ public class User
     // Navigation property: Reference to Gym
     public Gym? Gym { get; set; }
 
-    // Navigation property: Member profile (when Role == Member)
-    public Member? Member { get; set; }
-
     // Navigation property: One user has many refresh tokens
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

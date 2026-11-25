@@ -1,8 +1,9 @@
-using Identity.Domain.Entities;
+using Members.Domain.Entities;
+using Members.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Identity.Infrastructure.Data.Configurations;
+namespace Members.Infrastructure.Data.Configurations;
 
 public class MemberConfiguration : IEntityTypeConfiguration<Member>
 {
@@ -14,12 +15,6 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
 
         builder.Property(m => m.GymId)
             .IsRequired();
-
-        builder.Property(m => m.UserId)
-            .IsRequired();
-
-        builder.HasIndex(m => m.UserId)
-            .IsUnique();
 
         builder.Property(m => m.MemberCode)
             .IsRequired()
@@ -35,6 +30,13 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.Property(m => m.LastName)
             .IsRequired()
             .HasMaxLength(100);
+
+        builder.Property(m => m.Email)
+            .IsRequired()
+            .HasMaxLength(255);
+
+        builder.HasIndex(m => new { m.GymId, m.Email })
+            .IsUnique();
 
         builder.Property(m => m.PhoneNumber)
             .IsRequired()
@@ -63,20 +65,17 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
             .IsRequired(false)
             .HasMaxLength(30);
 
+        builder.Property(m => m.Status)
+            .IsRequired()
+            .HasDefaultValue(MemberStatus.Active);
+
         builder.Property(m => m.CreatedBy)
             .IsRequired();
 
         builder.Property(m => m.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 
-        builder.HasOne(m => m.Gym)
-            .WithMany(g => g.Members)
-            .HasForeignKey(m => m.GymId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(m => m.User)
-            .WithOne(u => u.Member)
-            .HasForeignKey<Member>(m => m.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.Property(m => m.UpdatedAt)
+            .IsRequired(false);
     }
 }

@@ -74,11 +74,5 @@ public class GymConfiguration : IEntityTypeConfiguration<Gym>
             .WithOne(u => u.Gym)
             .HasForeignKey(u => u.GymId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        // One Gym has Many Members
-        builder.HasMany(g => g.Members)
-            .WithOne(m => m.Gym)
-            .HasForeignKey(m => m.GymId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

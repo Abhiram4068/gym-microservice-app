@@ -1,7 +1,7 @@
 using FluentValidation;
-using Identity.Application.DTOs.Member;
+using Members.Application.DTOs.Member;
 
-namespace Identity.Application.Validators;
+namespace Members.Application.Validators;
 
 public class CreateMemberRequestValidator : AbstractValidator<CreateMemberRequestDto>
 {

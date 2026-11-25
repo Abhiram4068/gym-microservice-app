@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Identity.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    [Migration("20261125074500_LinkMemberToUser")]
-    partial class LinkMemberToUser
+    [Migration("20261125104500_RemoveMemberFromIdentity")]
+    partial class RemoveMemberFromIdentity
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -100,80 +100,6 @@ namespace Identity.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Gyms", (string)null);
-                });
-
-            modelBuilder.Entity("Identity.Domain.Entities.Member", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Address")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int?>("BloodGroup")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateOnly?>("DateOfBirth")
-                        .HasColumnType("date");
-
-                    b.Property<string>("EmergencyContactName")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("EmergencyContactPhone")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("Gender")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("GymId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("MemberCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.HasIndex("GymId", "MemberCode")
-                        .IsUnique();
-
-                    b.HasIndex("GymId", "PhoneNumber");
-
-                    b.ToTable("Members", (string)null);
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.RefreshToken", b =>
@@ -294,25 +220,6 @@ namespace Identity.Infrastructure.Data.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Domain.Entities.Member", b =>
-                {
-                    b.HasOne("Identity.Domain.Entities.Gym", "Gym")
-                        .WithMany("Members")
-                        .HasForeignKey("GymId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Identity.Domain.Entities.User", "User")
-                        .WithOne("Member")
-                        .HasForeignKey("Identity.Domain.Entities.Member", "UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Gym");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Identity.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Identity.Domain.Entities.User", "User")
@@ -336,15 +243,11 @@ namespace Identity.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Identity.Domain.Entities.Gym", b =>
                 {
-                    b.Navigation("Members");
-
                     b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.User", b =>
                 {
-                    b.Navigation("Member");
-
                     b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618

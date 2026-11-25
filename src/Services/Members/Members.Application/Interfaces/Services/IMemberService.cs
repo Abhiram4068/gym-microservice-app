@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GymPlatform.Common.Responses;
-using Identity.Application.DTOs.Member;
+using Members.Application.DTOs.Member;
 
-namespace Identity.Application.Interfaces.Services;
+namespace Members.Application.Interfaces.Services;
 
 public interface IMemberService
 {

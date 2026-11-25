@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0-*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Members.Application\Members.Application.csproj" />
     <ProjectReference Include="..\Members.Domain\Members.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\GymPlatform.Contracts\GymPlatform.Contracts.csproj" />
@@ -10,6 +14,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
   </PropertyGroup>
 
 </Project>

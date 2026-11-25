@@ -1,4 +1,4 @@
-namespace Identity.Domain.Enums;
+namespace Members.Domain.Enums;
 
 public enum BloodGroup
 {
@@ -11,3 +11,4 @@ public enum BloodGroup
     OPositive = 7,
     ONegative = 8
 }
+

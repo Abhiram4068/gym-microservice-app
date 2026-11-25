@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useToast } from '../../components/common/Toast';
-import { userApi } from '../../api/user';
+import { useToast } from '../../components/common/useToast';
+import { membersApi } from '../../api/members';
 
 const DEFAULT_AVATARS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
@@ -176,7 +176,7 @@ const CreateCustomer = () => {
         emergencyContactPhone: formData.emergencyContactPhone.trim() || null
       };
 
-      const res = await userApi.createMember(payload);
+      const res = await membersApi.createMember(payload);
       if (!res.success) {
         setIsSubmitting(false);
         const errMsg = res.errors && res.errors.length > 0
