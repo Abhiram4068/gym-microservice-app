@@ -68,6 +68,27 @@ export const userApi = {
   },
 
   /**
+   * Soft-delete a receptionist user from the current gym
+   * @param {string} id - User Guid
+   */
+  deleteReceptionist: async (id) => {
+    try {
+      const response = await axiosClient.delete(`/user/${id}`);
+      return {
+        success: true,
+        data: response.data?.data,
+        message: response.data?.message || 'Receptionist deleted successfully.'
+      };
+    } catch (error) {
+      const respData = error.response?.data;
+      return {
+        success: false,
+        message: respData?.message || 'Failed to delete receptionist.'
+      };
+    }
+  },
+
+  /**
    * Fetch paginated, sorted, filterable list of gym owners.
    * Calls GET /api/user/gymowners
    * @param {Object} params - Query parameters (search, status, sortBy, sortOrder, pageNumber, pageSize)

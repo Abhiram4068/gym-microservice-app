@@ -103,9 +103,9 @@ public class UserService : IUserService
         CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAndGymIdAsync(userId, gymId, cancellationToken);
-        if (user == null)
+        if (user == null || user.Status == UserStatus.Deleted || user.Role != UserRole.Receptionist)
         {
-            return ApiResponse<ReceptionistDto>.Fail("User not found in your gym.");
+            return ApiResponse<ReceptionistDto>.Fail("Receptionist not found in your gym.");
         }
 
         // Toggle Active <-> Inactive
@@ -118,6 +118,26 @@ public class UserService : IUserService
         var responseDto = MapToReceptionistDto(user);
         var statusLabel = user.Status == UserStatus.Active ? "activated" : "deactivated";
         return ApiResponse<ReceptionistDto>.Ok(responseDto, $"User successfully {statusLabel}.");
+    }
+
+    public async Task<ApiResponse<bool>> DeleteReceptionistAsync(
+        Guid gymId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAndGymIdAsync(userId, gymId, cancellationToken);
+        if (user == null || user.Status == UserStatus.Deleted || user.Role != UserRole.Receptionist)
+        {
+            return ApiResponse<bool>.Fail("Receptionist not found in your gym.");
+        }
+
+        user.Status = UserStatus.Deleted;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        _logger.LogInformation("Receptionist {UserId} soft-deleted in Gym {GymId}", user.Id, gymId);
+
+        return ApiResponse<bool>.Ok(true, "Receptionist deleted successfully.");
     }
 
     private static ReceptionistDto MapToReceptionistDto(User user)
