@@ -12,8 +12,8 @@ GMAP is a **multi-tenant, event-driven SaaS platform** that automates gym operat
 | Layer | Target / SRS Baseline | Current Repo Reality |
 | :--- | :--- | :--- |
 | **Backend Runtime** | .NET 10 / ASP.NET Core (C# 14) | .NET 10 (`net10.0`) |
-| **ORM & Database** | EF Core 10 + PostgreSQL (Npgsql) | EF Core 10 + **SQL Server** in `Identity` *(see §6)* |
-| **API Gateway** | YARP | `GymPlatform.Gateway` scaffolded (not yet configured) |
+| **ORM & Database** | EF Core 10 + PostgreSQL (Npgsql) | EF Core 10 + **SQL Server** in `Identity` & `Members` *(see §6)* |
+| **API Gateway** | YARP | `GymPlatform.Gateway` (`Yarp.ReverseProxy` 2.3.0) routing `/api/auth`, `/api/user`, `/api/members` |
 | **Messaging & Outbox** | RabbitMQ + MassTransit + EF Core Outbox | Not yet wired |
 | **Frontend** | React + TypeScript | React 19 + Vite 8 + Tailwind CSS (**JSX** *(see §6)*) |
 | **Auth & Validation** | JWT Bearer + ASP.NET Core Identity + FluentValidation | Custom `User` + `PasswordHasher` + JWT + Refresh Token rotation + FluentValidation |
@@ -37,24 +37,32 @@ GMAP is a **multi-tenant, event-driven SaaS platform** that automates gym operat
 
 ### Implemented
 - **Solution & Scaffolding**: `GymPlatform.sln` / `GymPlatform.slnx` with all 5 service projects (`.Api`, `.Application`, `.Domain`, `.Infrastructure`), `GymPlatform.Gateway`, `GymPlatform.Common`, and `GymPlatform.Contracts`.
-- **`GymPlatform.Common`**: `ApiResponse<T>` and `PagedResult<T>`.
+- **`GymPlatform.Common`**: `ApiResponse<T>`, `ErrorType`, `PagedResult<T>`, `PaginationHelper`, and `ClaimsPrincipalExtensions` (`TryGetGymId`, `GetUserId`).
+- **`GymPlatform.Gateway`**: Configured `Yarp.ReverseProxy` (`http://localhost:5037`) routing `/api/auth/*` & `/api/user/*` → `Identity.Api` (`5256`) and `/api/members/*` → `Members.Api` (`5295`), with `AllowFrontend` CORS, `X-Correlation-ID` forwarding, and `/health`.
 - **`Identity` Service** (Clean Architecture):
-  - **Domain**: `Gym`, `User` (`GymId` nullable for `SuperAdmin`), `RefreshToken`, `UserRole`, `UserStatus`.
-  - **Infrastructure**: `IdentityDbContext`, entity configurations, migrations (`InitialIdentityCreate`, `AddGym`, `EditGymUsers`), `DbInitializer` (seeds SuperAdmin in Development), `JwtTokenGenerator`, `PasswordHasher`, repositories (`GymRepository`, `UserRepository`, `RefreshTokenRepository`).
+  - **Domain**: `Gym`, `User` (`GymId` nullable for `SuperAdmin`; `MemberId` nullable `Guid?` with unique filtered index for future member login linking), `RefreshToken`, `UserRole`, `UserStatus`.
+  - **Infrastructure**: `IdentityDbContext`, entity configurations, migrations (`InitialIdentityCreate`, `AddGym`, `EditGymUsers`, `AddMemberIdToUser`), `DbInitializer` (seeds SuperAdmin in Development), `JwtTokenGenerator`, `PasswordHasher`, repositories (`GymRepository`, `UserRepository`, `RefreshTokenRepository`).
   - **Application**: `AuthService`, `GymRegistrationService`, `GymOwnerService`, `UserService`, DTOs, and `FluentValidation` validators.
   - **API**:
     - `AuthController` (`/api/auth`): `admin-login`, `gym-login`, `refresh` (with refresh token rotation).
     - `UserController` (`/api/user`): `gym-register`, SuperAdmin gym owner listing/details/approve/reject (`/api/user/gymowners...`), and tenant-scoped GymOwner receptionist CRUD/status/soft-delete (`/api/user/receptionist`, `/api/user/receptionists...`, `/api/user/{id}/status`, `/api/user/{id}`).
+- **`Members` Service** (Clean Architecture):
+  - **Domain**: `Member` (with `MemberCode`, `Email`, `PhoneNumber`, `ProfileImageUrl`, `EmergencyContact*`, `JoiningDate`, `MemberStatus` (`Pending`, `Active`, `Inactive`, `Suspended`, `Deleted`), soft-delete `DeletedAt`), `Gender`, `MemberStatus`.
+  - **Infrastructure**: `MembersDbContext` (`__MembersMigrationsHistory`), `MemberConfiguration` (tenant-scoped unique `(GymId, Email)` & `(GymId, MemberCode)` indexes, soft-delete query filter), migrations (`InitialMembersCreate`, `UpdateMemberSchema`), `MemberRepository` (tenant-scoped search, filter, sort, pagination).
+  - **Application**: `MemberService`, `CreateMemberRequestDto`, `GetMembersRequestDto`, `MemberDto`, `CreateMemberRequestValidator`.
+  - **API**: `MembersController` (`/api/members`, port `5295`) validating Identity-issued JWTs and enforcing `GymId` from claims.
 - **`frontend/`**:
-  - `axiosClient.js` (fetch-based client with automatic 401 refresh-token rotation using single-flight `refreshPromise`, Vite proxy `/api` → `http://localhost:5256`).
-  - Role-protected routing (`SuperAdminRoute`, `GymOwnerRoute`) and layouts (`SuperAdminLayout`, `GymOwnerLayout`).
-  - Pages: `SuperAdminLogin`, `GymLogin`, `GymOwnerRegister`, SuperAdmin (`Dashboard`, `ViewOwners`, `OwnerDetails`), GymOwner (`GymOwnerDashboard`, `ManageReceptionists`, `AddReceptionist`, `ViewReceptionistModal`).
+  - `axiosClient.js` (fetch-based client with automatic 401 refresh-token rotation using single-flight `refreshPromise`, Vite proxy `/api` → `http://localhost:5037` Gateway).
+  - API modules: `auth.js`, `user.js`, `members.js`.
+  - Role-protected routing (`SuperAdminRoute`, `GymOwnerRoute`, `ReceptionistRoute`) and layouts (`SuperAdminLayout`, `GymOwnerLayout`, `ReceptionistLayout`).
+  - Pages: `SuperAdminLogin`, `GymLogin`, `GymOwnerRegister`, SuperAdmin (`Dashboard`, `ViewOwners`, `OwnerDetails`), GymOwner (`GymOwnerDashboard`, `ManageReceptionists`, `AddReceptionist`, `ViewReceptionistModal`), Receptionist (`ReceptionistDashboard`, `CreateCustomer`).
 
 ### Not Yet Implemented (Scaffolded / Pending)
-- `GymPlatform.Gateway` (still template `Hello World`).
-- `Identity` gaps: `Trainer` creation/management, GymOwner profile/settings (`TimezoneId`, `CurrencyCode`, notification preferences), `/api/v1/` route standardization.
+- `GymPlatform.Gateway`: Rate limiting on auth/webhook endpoints.
+- `Identity` gaps: `Trainer` creation/management, GymOwner profile/settings (`TimezoneId`, `CurrencyCode`, notification preferences), `/api/v1/` route standardization, member login/user-account provisioning.
 - `GymPlatform.Contracts` (event contracts).
-- `Members`, `Billing`, `Notifications`, `Reporting` services (all layers contain only template `Class1.cs` / `Program.cs`).
+- `Members` gaps: `Membership` entity & state machine, renewal, expiry scanning `BackgroundService`, and Outbox/RabbitMQ publishing.
+- `Billing`, `Notifications`, `Reporting` services (all layers contain only template `Class1.cs` / `Program.cs`).
 - RabbitMQ + MassTransit + EF Core Transactional Outbox + Idempotent Consumers.
 - `docker-compose.yml`, Serilog, OpenTelemetry, `/health/live` & `/health/ready`, automated tests (`UnitTests`, `IntegrationTests`, `ArchitectureTests`), and GitHub Actions CI/CD.
 
@@ -110,12 +118,12 @@ Following the SRS roadmap and current repo state, work proceeds in vertical slic
 ### Phase 1 — Foundation Hardening, Identity Completion & YARP Gateway
 - [x] **Shared Primitives (`GymPlatform.Common`)**: `ClaimsPrincipalExtensions`, `PaginationHelper`, and typed `ErrorType` / `ApiResponse<T>` mapping implemented; *(pending: global `ProblemDetails` exception handler and Correlation ID middleware)*.
 - [ ] **Identity Enhancements**: Add `Trainer` creation/listing/status management, `Gym` profile settings (`TimeZoneId`, `CurrencyCode`, notification preferences), and align routes toward `/api/v1/...` (or clean YARP path transforms).
-- [ ] **YARP API Gateway (`GymPlatform.Gateway`)**: Configure YARP routes, CORS, rate limiting on auth/webhook endpoints, and correlation ID forwarding. Point frontend `/api` proxy to Gateway.
+- [x] **YARP API Gateway (`GymPlatform.Gateway`)**: Configured YARP routes, CORS, and `X-Correlation-ID` forwarding; pointed frontend `/api` proxy to Gateway *(rate limiting on auth/webhook endpoints still pending)*.
 - [ ] **Local Infra & RabbitMQ (No-Docker Options)**: Configure RabbitMQ without Docker using either **CloudAMQP** (free "Little Lemur" hosted tier) or a **native Windows install** (`Erlang.ErlangOTP` + `RabbitMQ.RabbitMQServer` with `rabbitmq_management` UI), or `docker-compose.yml` where permitted. Store DB, JWT, and RabbitMQ connection strings per service via `dotnet user-secrets` (no secrets committed).
 
 ### Phase 2 — Contracts, `Members` Service & Outbox
 - [ ] **`GymPlatform.Contracts`**: Define immutable `MemberRegisteredV1`, `MembershipExpiringSoonV1`, and `PaymentCapturedV1`.
-- [ ] **`Members` Service**: Implement `Member` and `Membership` (separate entities, explicit state machine: `PendingPayment` → `Active` → `Expired` / `Cancelled`), tenant-scoped search/pagination, renewal without overwriting history.
+- [ ] **`Members` Service**: `Member` entity, registration (`MemberStatus.Pending`), and tenant-scoped search/filter/sort/pagination implemented; `Membership` entity (separate entity, explicit state machine: `PendingPayment` → `Active` → `Expired` / `Cancelled`) and renewal without overwriting history still pending.
 - [ ] **Messaging & Outbox**: Configure MassTransit + RabbitMQ + EF Core Transactional Outbox; publish `MemberRegisteredV1` on registration.
 
 ### Phase 3 — `Billing` Service & Razorpay Integration
