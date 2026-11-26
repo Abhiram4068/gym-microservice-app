@@ -108,10 +108,10 @@ All new code and refactors must adhere to these non-negotiable standards:
 Following the SRS roadmap and current repo state, work proceeds in vertical slices:
 
 ### Phase 1 — Foundation Hardening, Identity Completion & YARP Gateway
-- [ ] **Shared Primitives (`GymPlatform.Common`)**: Add `ClaimsPrincipalExtensions`, typed `ErrorType` / `Result` mapping for controllers, global `ProblemDetails` exception handler, and Correlation ID middleware.
+- [x] **Shared Primitives (`GymPlatform.Common`)**: `ClaimsPrincipalExtensions`, `PaginationHelper`, and typed `ErrorType` / `ApiResponse<T>` mapping implemented; *(pending: global `ProblemDetails` exception handler and Correlation ID middleware)*.
 - [ ] **Identity Enhancements**: Add `Trainer` creation/listing/status management, `Gym` profile settings (`TimeZoneId`, `CurrencyCode`, notification preferences), and align routes toward `/api/v1/...` (or clean YARP path transforms).
 - [ ] **YARP API Gateway (`GymPlatform.Gateway`)**: Configure YARP routes, CORS, rate limiting on auth/webhook endpoints, and correlation ID forwarding. Point frontend `/api` proxy to Gateway.
-- [ ] **Local Infra**: Add `docker-compose.yml` (Database, RabbitMQ with Management UI) and configure local secrets via `dotnet user-secrets` (no secrets committed).
+- [ ] **Local Infra & RabbitMQ (No-Docker Options)**: Configure RabbitMQ without Docker using either **CloudAMQP** (free "Little Lemur" hosted tier) or a **native Windows install** (`Erlang.ErlangOTP` + `RabbitMQ.RabbitMQServer` with `rabbitmq_management` UI), or `docker-compose.yml` where permitted. Store DB, JWT, and RabbitMQ connection strings per service via `dotnet user-secrets` (no secrets committed).
 
 ### Phase 2 — Contracts, `Members` Service & Outbox
 - [ ] **`GymPlatform.Contracts`**: Define immutable `MemberRegisteredV1`, `MembershipExpiringSoonV1`, and `PaymentCapturedV1`.
