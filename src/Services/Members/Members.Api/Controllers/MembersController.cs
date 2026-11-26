@@ -25,7 +25,7 @@ public class MembersController : ControllerBase
     /// Creates a new member for the authenticated receptionist or gym owner's gym.
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Receptionist,GymOwner")]
+    [Authorize(Roles = "3,2")]
     [ProducesResponseType(typeof(ApiResponse<MemberDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<MemberDto>), 400)]
     [ProducesResponseType(typeof(ApiResponse<MemberDto>), 409)]
@@ -54,7 +54,7 @@ public class MembersController : ControllerBase
     /// Retrieves a paginated, sorted, filterable, and searchable list of members belonging to the authenticated user's gym.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Receptionist,GymOwner")]
+    [Authorize(Roles = "3,2")]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<MemberDto>>), 200)]
     [ProducesResponseType(401)]
     public async Task<IActionResult> GetMembers(
@@ -74,7 +74,7 @@ public class MembersController : ControllerBase
     /// Retrieves a single member by ID for the authenticated user's gym.
     /// </summary>
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Receptionist,GymOwner")]
+    [Authorize(Roles = "3,2")]
     [ProducesResponseType(typeof(ApiResponse<MemberDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<MemberDto>), 404)]
     [ProducesResponseType(401)]

@@ -31,7 +31,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Role, user.Role.ToString()),
+            new(ClaimTypes.Role, ((int)user.Role).ToString()),
             new("firstName", user.FirstName),
             new("lastName", user.LastName)
         };
