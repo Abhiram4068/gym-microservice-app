@@ -3,7 +3,7 @@ import axiosClient from './axiosClient';
 export const membersApi = {
   /**
    * Create a new member for the authenticated Receptionist's gym (Members Service)
-   * @param {Object} data - { firstName, lastName, email, phoneNumber, dateOfBirth, gender, bloodGroup, address, emergencyContactName, emergencyContactPhone }
+   * @param {Object} data - { firstName, lastName, email, phoneNumber, dateOfBirth, gender, profileImageUrl, address, emergencyContactName, emergencyContactPhone, emergencyContactRelation, joiningDate }
    */
   createMember: async (data) => {
     try {
@@ -27,14 +27,13 @@ export const membersApi = {
 
   /**
    * Fetch paginated, sorted, filterable, and searchable members for the authenticated Receptionist's gym
-   * @param {Object} params - { search, gender, bloodGroup, status, sortBy, sortOrder, pageNumber, pageSize }
+   * @param {Object} params - { search, gender, status, sortBy, sortOrder, pageNumber, pageSize }
    */
   getMembers: async (params = {}) => {
     try {
       const queryParams = new URLSearchParams();
       if (params.search) queryParams.append('search', params.search.trim());
       if (params.gender !== undefined && params.gender !== null && params.gender !== '') queryParams.append('gender', params.gender);
-      if (params.bloodGroup !== undefined && params.bloodGroup !== null && params.bloodGroup !== '') queryParams.append('bloodGroup', params.bloodGroup);
       if (params.status !== undefined && params.status !== null && params.status !== '') queryParams.append('status', params.status);
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);

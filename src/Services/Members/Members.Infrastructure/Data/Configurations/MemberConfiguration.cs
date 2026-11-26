@@ -13,12 +13,14 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
 
         builder.HasKey(m => m.Id);
 
+        builder.HasQueryFilter(m => m.Status != MemberStatus.Deleted && m.DeletedAt == null);
+
         builder.Property(m => m.GymId)
             .IsRequired();
 
         builder.Property(m => m.MemberCode)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(30);
 
         builder.HasIndex(m => new { m.GymId, m.MemberCode })
             .IsUnique();
@@ -33,14 +35,14 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
 
         builder.Property(m => m.Email)
             .IsRequired()
-            .HasMaxLength(255);
+            .HasMaxLength(256);
 
         builder.HasIndex(m => new { m.GymId, m.Email })
             .IsUnique();
 
         builder.Property(m => m.PhoneNumber)
             .IsRequired()
-            .HasMaxLength(30);
+            .HasMaxLength(20);
 
         builder.HasIndex(m => new { m.GymId, m.PhoneNumber });
 
@@ -50,8 +52,9 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.Property(m => m.Gender)
             .IsRequired(false);
 
-        builder.Property(m => m.BloodGroup)
-            .IsRequired(false);
+        builder.Property(m => m.ProfileImageUrl)
+            .IsRequired(false)
+            .HasMaxLength(2048);
 
         builder.Property(m => m.Address)
             .IsRequired(false)
@@ -59,23 +62,37 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
 
         builder.Property(m => m.EmergencyContactName)
             .IsRequired(false)
-            .HasMaxLength(150);
+            .HasMaxLength(100);
 
         builder.Property(m => m.EmergencyContactPhone)
             .IsRequired(false)
-            .HasMaxLength(30);
+            .HasMaxLength(20);
+
+        builder.Property(m => m.EmergencyContactRelation)
+            .IsRequired(false)
+            .HasMaxLength(50);
+
+        builder.Property(m => m.JoiningDate)
+            .IsRequired();
 
         builder.Property(m => m.Status)
             .IsRequired()
-            .HasDefaultValue(MemberStatus.Active);
+            .HasDefaultValue(MemberStatus.Pending);
 
         builder.Property(m => m.CreatedBy)
             .IsRequired();
 
         builder.Property(m => m.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
+            .IsRequired()
+            .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+        builder.Property(m => m.UpdatedBy)
+            .IsRequired(false);
 
         builder.Property(m => m.UpdatedAt)
+            .IsRequired(false);
+
+        builder.Property(m => m.DeletedAt)
             .IsRequired(false);
     }
 }

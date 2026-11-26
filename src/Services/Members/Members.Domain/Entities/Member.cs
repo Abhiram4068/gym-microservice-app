@@ -23,7 +23,7 @@ public class Member
 
     public Gender? Gender { get; set; }
 
-    public BloodGroup? BloodGroup { get; set; }
+    public string? ProfileImageUrl { get; set; }
 
     public string? Address { get; set; }
 
@@ -31,11 +31,19 @@ public class Member
 
     public string? EmergencyContactPhone { get; set; }
 
-    public MemberStatus Status { get; set; } = MemberStatus.Active;
+    public string? EmergencyContactRelation { get; set; }
+
+    public DateOnly JoiningDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    public MemberStatus Status { get; set; } = MemberStatus.Pending;
 
     public Guid CreatedBy { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    public DateTime? UpdatedAt { get; set; }
+    public Guid? UpdatedBy { get; set; }
+
+    public DateTimeOffset? UpdatedAt { get; set; }
+
+    public DateTimeOffset? DeletedAt { get; set; }
 }

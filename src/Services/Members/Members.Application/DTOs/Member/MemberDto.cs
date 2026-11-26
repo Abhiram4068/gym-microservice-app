@@ -16,25 +16,17 @@ public record MemberDto
     public DateOnly? DateOfBirth { get; init; }
     public Gender? Gender { get; init; }
     public string? GenderName => Gender?.ToString();
-    public BloodGroup? BloodGroup { get; init; }
-    public string? BloodGroupName => BloodGroup switch
-    {
-        Domain.Enums.BloodGroup.APositive => "A+",
-        Domain.Enums.BloodGroup.ANegative => "A-",
-        Domain.Enums.BloodGroup.BPositive => "B+",
-        Domain.Enums.BloodGroup.BNegative => "B-",
-        Domain.Enums.BloodGroup.ABPositive => "AB+",
-        Domain.Enums.BloodGroup.ABNegative => "AB-",
-        Domain.Enums.BloodGroup.OPositive => "O+",
-        Domain.Enums.BloodGroup.ONegative => "O-",
-        _ => null
-    };
+    public string? ProfileImageUrl { get; init; }
     public string? Address { get; init; }
     public string? EmergencyContactName { get; init; }
     public string? EmergencyContactPhone { get; init; }
+    public string? EmergencyContactRelation { get; init; }
+    public DateOnly JoiningDate { get; init; }
     public MemberStatus Status { get; init; }
     public string StatusName => Status.ToString();
     public bool IsActive => Status == MemberStatus.Active;
     public Guid CreatedBy { get; init; }
-    public DateTime CreatedAt { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
+    public Guid? UpdatedBy { get; init; }
+    public DateTimeOffset? UpdatedAt { get; init; }
 }

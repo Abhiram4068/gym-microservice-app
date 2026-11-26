@@ -11,8 +11,10 @@ public record CreateMemberRequestDto
     public string PhoneNumber { get; init; } = string.Empty;
     public DateOnly? DateOfBirth { get; init; }
     public Gender? Gender { get; init; }
-    public BloodGroup? BloodGroup { get; init; }
+    public string? ProfileImageUrl { get; init; }
     public string? Address { get; init; }
     public string? EmergencyContactName { get; init; }
     public string? EmergencyContactPhone { get; init; }
+    public string? EmergencyContactRelation { get; init; }
+    public DateOnly? JoiningDate { get; init; }
 }

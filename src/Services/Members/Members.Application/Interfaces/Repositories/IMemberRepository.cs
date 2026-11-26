@@ -14,7 +14,6 @@ public interface IMemberRepository
         Guid gymId,
         string? search,
         Gender? gender,
-        BloodGroup? bloodGroup,
         MemberStatus? status,
         string? sortBy,
         string? sortOrder,

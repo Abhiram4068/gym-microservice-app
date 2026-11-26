@@ -2,13 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../../components/common/useToast';
 import { membersApi } from '../../api/members';
-
-const DEFAULT_AVATARS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=80'
-];
+import { getInitials } from '../../utils/initials';
 
 const GENDER_OPTIONS = [
   { label: 'Select Gender (Optional)', value: '' },
@@ -18,19 +12,7 @@ const GENDER_OPTIONS = [
   { label: 'Prefer not to say', value: '4' }
 ];
 
-const BLOOD_GROUP_OPTIONS = [
-  { label: 'Select Blood Group (Optional)', value: '' },
-  { label: 'A+ (A Positive)', value: '1' },
-  { label: 'A- (A Negative)', value: '2' },
-  { label: 'B+ (B Positive)', value: '3' },
-  { label: 'B- (B Negative)', value: '4' },
-  { label: 'AB+ (AB Positive)', value: '5' },
-  { label: 'AB- (AB Negative)', value: '6' },
-  { label: 'O+ (O Positive)', value: '7' },
-  { label: 'O- (O Negative)', value: '8' }
-];
-
-const PHONE_REGEX = /^[0-9+() -]{7,25}$/;
+const PHONE_REGEX = /^[0-9+() -]{7,20}$/;
 
 const getInputClasses = (hasError) =>
   `w-full px-3.5 py-2.5 text-sm font-medium text-[#0f172a] bg-white border rounded-lg outline-none transition ${
@@ -54,8 +36,6 @@ const CreateCustomer = () => {
   const { showToast } = useToast();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [avatarIndex, setAvatarIndex] = useState(1);
-  const [customAvatar, setCustomAvatar] = useState(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -64,10 +44,11 @@ const CreateCustomer = () => {
     phoneNumber: '',
     dateOfBirth: '',
     gender: '',
-    bloodGroup: '',
+    joiningDate: new Date().toISOString().split('T')[0],
     address: '',
     emergencyContactName: '',
-    emergencyContactPhone: ''
+    emergencyContactPhone: '',
+    emergencyContactRelation: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -77,22 +58,6 @@ const CreateCustomer = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const handleAvatarCycle = () => {
-    setCustomAvatar(null);
-    setAvatarIndex((prev) => (prev + 1) % DEFAULT_AVATARS.length);
-  };
-
-  const handleAvatarUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomAvatar(reader.result);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -116,8 +81,8 @@ const CreateCustomer = () => {
     const email = formData.email.trim();
     if (!email) {
       errs.email = 'Email address is required.';
-    } else if (email.length > 255) {
-      errs.email = 'Email must not exceed 255 characters.';
+    } else if (email.length > 256) {
+      errs.email = 'Email must not exceed 256 characters.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errs.email = 'Please enter a valid email address.';
     }
@@ -125,8 +90,8 @@ const CreateCustomer = () => {
     const phone = formData.phoneNumber.trim();
     if (!phone) {
       errs.phoneNumber = 'Phone number is required.';
-    } else if (phone.length > 30) {
-      errs.phoneNumber = 'Phone number must not exceed 30 characters.';
+    } else if (phone.length > 20) {
+      errs.phoneNumber = 'Phone number must not exceed 20 characters.';
     } else if (!PHONE_REGEX.test(phone)) {
       errs.phoneNumber = 'Please enter a valid phone number.';
     }
@@ -135,17 +100,21 @@ const CreateCustomer = () => {
       errs.address = 'Address must not exceed 500 characters.';
     }
 
-    if (formData.emergencyContactName.trim().length > 150) {
-      errs.emergencyContactName = 'Emergency contact name must not exceed 150 characters.';
+    if (formData.emergencyContactName.trim().length > 100) {
+      errs.emergencyContactName = 'Emergency contact name must not exceed 100 characters.';
     }
 
     const emergencyPhone = formData.emergencyContactPhone.trim();
     if (emergencyPhone) {
-      if (emergencyPhone.length > 30) {
-        errs.emergencyContactPhone = 'Emergency contact phone must not exceed 30 characters.';
+      if (emergencyPhone.length > 20) {
+        errs.emergencyContactPhone = 'Emergency contact phone must not exceed 20 characters.';
       } else if (!PHONE_REGEX.test(emergencyPhone)) {
         errs.emergencyContactPhone = 'Please enter a valid emergency contact phone number.';
       }
+    }
+
+    if (formData.emergencyContactRelation.trim().length > 50) {
+      errs.emergencyContactRelation = 'Relation must not exceed 50 characters.';
     }
 
     return errs;
@@ -170,10 +139,11 @@ const CreateCustomer = () => {
         phoneNumber: formData.phoneNumber.trim(),
         dateOfBirth: formData.dateOfBirth || null,
         gender: formData.gender ? Number(formData.gender) : null,
-        bloodGroup: formData.bloodGroup ? Number(formData.bloodGroup) : null,
+        joiningDate: formData.joiningDate || null,
         address: formData.address.trim() || null,
         emergencyContactName: formData.emergencyContactName.trim() || null,
-        emergencyContactPhone: formData.emergencyContactPhone.trim() || null
+        emergencyContactPhone: formData.emergencyContactPhone.trim() || null,
+        emergencyContactRelation: formData.emergencyContactRelation.trim() || null
       };
 
       const res = await membersApi.createMember(payload);
@@ -187,25 +157,15 @@ const CreateCustomer = () => {
       }
 
       const createdMember = res.data;
-      const assignedCode = createdMember?.memberCode || 'MEM-SAVED';
+      const fullName = createdMember?.fullName || `${payload.firstName} ${payload.lastName}`.trim();
+      const assignedCode = createdMember?.memberCode || '';
 
-      const newCustomer = {
-        id: createdMember?.id || 'cust-' + Date.now(),
-        memberCode: assignedCode,
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        fullName: `${payload.firstName} ${payload.lastName}`.trim(),
-        phone: payload.phoneNumber,
-        avatarUrl: customAvatar || DEFAULT_AVATARS[avatarIndex],
-        status: 'Active',
-        createdAt: createdMember?.createdAt || new Date().toISOString()
-      };
+      showToast(
+        assignedCode
+          ? `Member ${fullName} registered successfully! (Code: ${assignedCode})`
+          : `Member ${fullName} registered successfully!`
+      );
 
-      const existing = JSON.parse(localStorage.getItem('gym_customers') || '[]');
-      existing.unshift(newCustomer);
-      localStorage.setItem('gym_customers', JSON.stringify(existing));
-
-      showToast(`Member ${newCustomer.fullName} registered successfully! (Code: ${assignedCode})`);
       setTimeout(() => {
         navigate('/receptionist/dashboard');
       }, 600);
@@ -215,7 +175,8 @@ const CreateCustomer = () => {
     }
   };
 
-  const activeAvatar = customAvatar || DEFAULT_AVATARS[avatarIndex];
+  const initials = getInitials(formData.firstName, formData.lastName);
+  const displayName = `${formData.firstName} ${formData.lastName}`.trim();
 
   return (
     <div className="max-w-[1300px] mx-auto pb-16">
@@ -266,35 +227,26 @@ const CreateCustomer = () => {
         </div>
       </div>
 
-      {/* 3. Circular Avatar Preview */}
-      {/* <div className="mb-8">
-        <div className="relative inline-block group">
-          <img
-            src={activeAvatar}
-            alt="Customer Avatar"
-            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-white shadow-md"
-          />
-          <div className="absolute inset-0 rounded-full bg-black/35 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
-            <label className="cursor-pointer p-1.5 rounded-full bg-white/90 text-[#0f172a] hover:bg-white text-xs shadow-xs" title="Upload custom photo">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-            </label>
-            <button
-              type="button"
-              onClick={handleAvatarCycle}
-              className="p-1.5 rounded-full bg-white/90 text-[#0f172a] hover:bg-white text-xs shadow-xs border-none cursor-pointer"
-              title="Next preset avatar"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-          </div>
+      {/* 3. Initials Avatar Preview */}
+      <div className="mb-8 flex items-center gap-4">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#eff6ff] border-2 border-[#bfdbfe] text-[#116dff] flex items-center justify-center shadow-xs select-none">
+          {initials ? (
+            <span className="text-2xl sm:text-3xl font-bold tracking-tight">{initials}</span>
+          ) : (
+            <svg className="w-9 h-9 text-[#93c5fd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          )}
         </div>
-      </div> */}
+        <div>
+          <p className="text-base font-bold text-[#0f172a] m-0">
+            {displayName || 'New Member'}
+          </p>
+          <p className="text-xs text-[#64748b] mt-0.5 m-0">
+            Member code is generated automatically on registration
+          </p>
+        </div>
+      </div>
 
       {/* 4. Member Information Form */}
       <div>
@@ -333,7 +285,7 @@ const CreateCustomer = () => {
               <input
                 type="email"
                 name="email"
-                maxLength={255}
+                maxLength={256}
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="rahul@example.com"
@@ -345,7 +297,7 @@ const CreateCustomer = () => {
               <input
                 type="tel"
                 name="phoneNumber"
-                maxLength={30}
+                maxLength={20}
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 placeholder="+91 98765 43210"
@@ -354,7 +306,7 @@ const CreateCustomer = () => {
             </FormField>
           </div>
 
-          {/* Row 2: Date of Birth, Gender, Blood Group */}
+          {/* Row 2: Date of Birth, Gender, Joining Date */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField label="Date of Birth" error={errors.dateOfBirth}>
               <input
@@ -381,32 +333,27 @@ const CreateCustomer = () => {
               </select>
             </FormField>
 
-            <FormField label="Blood Group" error={errors.bloodGroup}>
-              <select
-                name="bloodGroup"
-                value={formData.bloodGroup}
+            <FormField label="Joining Date" required error={errors.joiningDate}>
+              <input
+                type="date"
+                name="joiningDate"
+                value={formData.joiningDate}
                 onChange={handleChange}
-                className={`${getInputClasses(!!errors.bloodGroup)} cursor-pointer`}
-              >
-                {BLOOD_GROUP_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                className={getInputClasses(!!errors.joiningDate)}
+              />
             </FormField>
           </div>
 
-          {/* Row 3: Emergency Contact Name, Emergency Contact Phone */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Row 3: Emergency Contact Name, Emergency Contact Phone, Relation */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField label="Emergency Contact Name" error={errors.emergencyContactName}>
               <input
                 type="text"
                 name="emergencyContactName"
-                maxLength={150}
+                maxLength={100}
                 value={formData.emergencyContactName}
                 onChange={handleChange}
-                placeholder="e.g. Priya Sharma (Spouse)"
+                placeholder="e.g. Priya Sharma"
                 className={getInputClasses(!!errors.emergencyContactName)}
               />
             </FormField>
@@ -415,11 +362,23 @@ const CreateCustomer = () => {
               <input
                 type="tel"
                 name="emergencyContactPhone"
-                maxLength={30}
+                maxLength={20}
                 value={formData.emergencyContactPhone}
                 onChange={handleChange}
                 placeholder="+91 98765 00000"
                 className={getInputClasses(!!errors.emergencyContactPhone)}
+              />
+            </FormField>
+
+            <FormField label="Emergency Contact Relation" error={errors.emergencyContactRelation}>
+              <input
+                type="text"
+                name="emergencyContactRelation"
+                maxLength={50}
+                value={formData.emergencyContactRelation}
+                onChange={handleChange}
+                placeholder="e.g. Spouse, Parent"
+                className={getInputClasses(!!errors.emergencyContactRelation)}
               />
             </FormField>
           </div>
@@ -436,6 +395,24 @@ const CreateCustomer = () => {
               className={`${getInputClasses(!!errors.address)} resize-none`}
             />
           </FormField>
+
+          {/* Bottom Actions */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => navigate('/receptionist/dashboard')}
+              className="px-5 py-2.5 text-sm font-semibold text-[#334155] bg-white border border-[#cbd5e1] rounded-lg hover:bg-slate-50 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 text-sm font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] active:bg-[#1e40af] rounded-lg transition shadow-sm inline-flex items-center gap-2 cursor-pointer border-none"
+            >
+              {isSubmitting ? 'Registering...' : 'Create customer'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

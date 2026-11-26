@@ -6,7 +6,6 @@ public record GetMembersRequestDto
 {
     public string? Search { get; init; }
     public Gender? Gender { get; init; }
-    public BloodGroup? BloodGroup { get; init; }
     public MemberStatus? Status { get; init; }
     public string? SortBy { get; init; } = "CreatedAt";
     public string? SortOrder { get; init; } = "desc";

@@ -32,7 +32,6 @@ public class MemberRepository : IMemberRepository
         Guid gymId,
         string? search,
         Gender? gender,
-        BloodGroup? bloodGroup,
         MemberStatus? status,
         string? sortBy,
         string? sortOrder,
@@ -46,11 +45,6 @@ public class MemberRepository : IMemberRepository
         if (gender.HasValue)
         {
             query = query.Where(m => m.Gender == gender.Value);
-        }
-
-        if (bloodGroup.HasValue)
-        {
-            query = query.Where(m => m.BloodGroup == bloodGroup.Value);
         }
 
         if (status.HasValue)
@@ -91,6 +85,9 @@ public class MemberRepository : IMemberRepository
             "dateofbirth" or "dob" => isDescending
                 ? query.OrderByDescending(m => m.DateOfBirth)
                 : query.OrderBy(m => m.DateOfBirth),
+            "joiningdate" => isDescending
+                ? query.OrderByDescending(m => m.JoiningDate)
+                : query.OrderBy(m => m.JoiningDate),
             "status" => isDescending
                 ? query.OrderByDescending(m => m.Status)
                 : query.OrderBy(m => m.Status),
@@ -131,6 +128,7 @@ public class MemberRepository : IMemberRepository
     public async Task<int> GetCountByGymIdAsync(Guid gymId, CancellationToken cancellationToken = default)
     {
         return await _context.Members
+            .IgnoreQueryFilters()
             .CountAsync(m => m.GymId == gymId, cancellationToken);
     }
 
