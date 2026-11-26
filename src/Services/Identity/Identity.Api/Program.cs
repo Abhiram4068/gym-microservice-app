@@ -5,6 +5,7 @@ using Identity.Application.Interfaces.Repositories;
 using Identity.Application.Interfaces.Services;
 using Identity.Application.Services;
 using Identity.Application.Validators;
+using Identity.Infrastructure;
 using Identity.Infrastructure.Data;
 using Identity.Infrastructure.Repositories;
 using Identity.Infrastructure.Security;
@@ -74,6 +75,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
 // Register Application & Infrastructure Services
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IGymRepository, GymRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
