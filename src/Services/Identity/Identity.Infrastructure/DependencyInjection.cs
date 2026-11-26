@@ -1,4 +1,5 @@
-using Identity.Infrastructure.Messaging.Configuration;
+using GymPlatform.Messaging;
+using Identity.Infrastructure.Messaging.Consumers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +11,10 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddMessaging(configuration);
+        services.AddGymMessaging(configuration, x =>
+        {
+            x.AddConsumer<MemberRegisteredConsumer>();
+        });
 
         return services;
     }
