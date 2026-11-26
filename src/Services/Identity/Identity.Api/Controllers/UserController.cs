@@ -42,7 +42,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpPost("receptionist")]
-    [Authorize(Roles = "GymOwner")]
+    [Authorize(Roles = "2")]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 400)]
     [ProducesResponseType(401)]
@@ -60,7 +60,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpGet("gymowners")]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "1")]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 200)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 401)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<GymOwnerListItemDto>>), 403)]
@@ -73,7 +73,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpGet("gymowners/{id:guid}")]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "1")]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 400)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 404)]
@@ -91,7 +91,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpGet("receptionists")]
-    [Authorize(Roles = "GymOwner")]
+    [Authorize(Roles = "2")]
     [ProducesResponseType(typeof(ApiResponse<List<ReceptionistDto>>), 200)]
     [ProducesResponseType(401)]
     public async Task<IActionResult> GetReceptionists(CancellationToken cancellationToken)
@@ -106,7 +106,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpGet("receptionists/{id:guid}")]
-    [Authorize(Roles = "GymOwner")]
+    [Authorize(Roles = "2")]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 400)]
     [ProducesResponseType(401)]
@@ -130,7 +130,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpPut("receptionists/{id:guid}")]
-    [Authorize(Roles = "GymOwner")]
+    [Authorize(Roles = "2")]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 400)]
     [ProducesResponseType(401)]
@@ -156,7 +156,7 @@ public class UserController : ApiControllerBase
 
     [HttpPost("gymowners/{id:guid}/approve")]
     [HttpPut("gymowners/{id:guid}/approve")]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "1")]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 400)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 404)]
@@ -174,7 +174,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
-    [Authorize(Roles = "GymOwner")]
+    [Authorize(Roles = "2")]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<ReceptionistDto>), 400)]
     [ProducesResponseType(401)]
@@ -192,7 +192,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "GymOwner")]
+    [Authorize(Roles = "2")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     [ProducesResponseType(401)]
@@ -212,7 +212,7 @@ public class UserController : ApiControllerBase
 
     [HttpPost("gymowners/{id:guid}/reject")]
     [HttpPut("gymowners/{id:guid}/reject")]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "1")]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 400)]
     [ProducesResponseType(typeof(ApiResponse<GymOwnerDetailDto>), 404)]

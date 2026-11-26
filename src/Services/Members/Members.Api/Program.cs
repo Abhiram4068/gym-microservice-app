@@ -22,9 +22,16 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // Configure EF Core with SQL Server (isolated migration history table for Members service)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "ConnectionStrings:DefaultConnection must be configured via dotnet user-secrets or environment variables.");
+}
+
 builder.Services.AddDbContext<MembersDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        connectionString,
         sqlOptions =>
         {
             sqlOptions.MigrationsAssembly(typeof(MembersDbContext).Assembly.FullName);
@@ -34,6 +41,12 @@ builder.Services.AddDbContext<MembersDbContext>(options =>
 // Configure JWT Authentication (validates tokens issued by Identity service)
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSection["SecretKey"] ?? string.Empty;
+if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
+{
+    throw new InvalidOperationException(
+        "JwtSettings:SecretKey must be configured with at least 32 characters via dotnet user-secrets or environment variables.");
+}
+
 var issuer = jwtSection["Issuer"] ?? "GymPlatform.Identity";
 var audience = jwtSection["Audience"] ?? "GymPlatform.Client";
 
@@ -67,11 +80,14 @@ builder.Services.AddScoped<IMemberRepository, MemberRepository>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 
 // Configure CORS for Frontend
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:5173"];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
