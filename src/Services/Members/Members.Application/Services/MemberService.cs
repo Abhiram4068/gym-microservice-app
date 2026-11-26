@@ -3,8 +3,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using GymPlatform.Common.Messaging;
 using GymPlatform.Common.Pagination;
 using GymPlatform.Common.Responses;
+using GymPlatform.Contracts.Events;
 using Members.Application.DTOs.Member;
 using Members.Application.Interfaces.Repositories;
 using Members.Application.Interfaces.Services;
@@ -18,15 +20,18 @@ public class MemberService : IMemberService
 {
     private readonly IMemberRepository _memberRepository;
     private readonly IValidator<CreateMemberRequestDto> _validator;
+    private readonly IEventBus _eventBus;
     private readonly ILogger<MemberService> _logger;
 
     public MemberService(
         IMemberRepository memberRepository,
         IValidator<CreateMemberRequestDto> validator,
+        IEventBus eventBus,
         ILogger<MemberService> logger)
     {
         _memberRepository = memberRepository;
         _validator = validator;
+        _eventBus = eventBus;
         _logger = logger;
     }
 
@@ -81,6 +86,18 @@ public class MemberService : IMemberService
         };
 
         await _memberRepository.AddAsync(member, cancellationToken);
+
+        await _eventBus.PublishAsync(
+            new MemberRegisteredV1(
+                EventId: Guid.NewGuid(),
+                OccurredAtUtc: DateTimeOffset.UtcNow,
+                GymId: member.GymId,
+                MemberId: member.Id,
+                MemberCode: member.MemberCode,
+                FullName: $"{member.FirstName} {member.LastName}",
+                Email: member.Email,
+                PhoneNumber: member.PhoneNumber),
+            cancellationToken);
 
         _logger.LogInformation("Member {MemberId} ({MemberCode}) created for Gym {GymId} by User {UserId}",
             member.Id, member.MemberCode, gymId, receptionistId);
