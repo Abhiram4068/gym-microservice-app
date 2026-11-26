@@ -13,6 +13,11 @@ public class User
     /// </summary>
     public Guid? GymId { get; set; }
 
+    /// <summary>
+    /// Logical reference to the Member record in the Members service (NULL for staff/admins).
+    /// </summary>
+    public Guid? MemberId { get; set; }
+
     public string FirstName { get; set; } = string.Empty;
 
     public string LastName { get; set; } = string.Empty;

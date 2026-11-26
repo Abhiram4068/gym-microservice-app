@@ -69,13 +69,15 @@ public class MemberService : IMemberService
             PhoneNumber = normalizedPhone,
             DateOfBirth = request.DateOfBirth,
             Gender = request.Gender,
-            BloodGroup = request.BloodGroup,
+            ProfileImageUrl = string.IsNullOrWhiteSpace(request.ProfileImageUrl) ? null : request.ProfileImageUrl.Trim(),
             Address = string.IsNullOrWhiteSpace(request.Address) ? null : request.Address.Trim(),
             EmergencyContactName = string.IsNullOrWhiteSpace(request.EmergencyContactName) ? null : request.EmergencyContactName.Trim(),
             EmergencyContactPhone = string.IsNullOrWhiteSpace(request.EmergencyContactPhone) ? null : request.EmergencyContactPhone.Trim(),
-            Status = MemberStatus.Active,
+            EmergencyContactRelation = string.IsNullOrWhiteSpace(request.EmergencyContactRelation) ? null : request.EmergencyContactRelation.Trim(),
+            JoiningDate = request.JoiningDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            Status = MemberStatus.Pending,
             CreatedBy = receptionistId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         await _memberRepository.AddAsync(member, cancellationToken);
@@ -97,7 +99,6 @@ public class MemberService : IMemberService
             gymId,
             request.Search,
             request.Gender,
-            request.BloodGroup,
             request.Status,
             request.SortBy,
             request.SortOrder,
@@ -154,12 +155,16 @@ public class MemberService : IMemberService
         PhoneNumber = m.PhoneNumber,
         DateOfBirth = m.DateOfBirth,
         Gender = m.Gender,
-        BloodGroup = m.BloodGroup,
+        ProfileImageUrl = m.ProfileImageUrl,
         Address = m.Address,
         EmergencyContactName = m.EmergencyContactName,
         EmergencyContactPhone = m.EmergencyContactPhone,
+        EmergencyContactRelation = m.EmergencyContactRelation,
+        JoiningDate = m.JoiningDate,
         Status = m.Status,
         CreatedBy = m.CreatedBy,
-        CreatedAt = m.CreatedAt
+        CreatedAt = m.CreatedAt,
+        UpdatedBy = m.UpdatedBy,
+        UpdatedAt = m.UpdatedAt
     };
 }

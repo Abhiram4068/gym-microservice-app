@@ -176,6 +176,9 @@ namespace Identity.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid?>("MemberId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("MustChangePassword")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -214,6 +217,10 @@ namespace Identity.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.HasIndex("GymId");
+
+                    b.HasIndex("MemberId")
+                        .IsUnique()
+                        .HasFilter("[MemberId] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
                 });

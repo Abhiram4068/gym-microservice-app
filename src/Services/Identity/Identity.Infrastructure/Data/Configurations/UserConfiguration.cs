@@ -68,6 +68,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.UpdatedBy)
             .IsRequired(false);
 
+        builder.Property(u => u.MemberId)
+            .IsRequired(false);
+
+        builder.HasIndex(u => u.MemberId)
+            .IsUnique()
+            .HasFilter("[MemberId] IS NOT NULL");
+
         builder.HasMany(u => u.RefreshTokens)
             .WithOne(rt => rt.User)
             .HasForeignKey(rt => rt.UserId)

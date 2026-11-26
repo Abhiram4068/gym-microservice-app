@@ -42,10 +42,12 @@ const ReceptionistDashboard = () => {
       if (searchTerm.trim()) {
         params.search = searchTerm.trim();
       }
-      if (statusFilter === 'active') {
+      if (statusFilter === 'pending') {
         params.status = 1;
-      } else if (statusFilter === 'inactive') {
+      } else if (statusFilter === 'active') {
         params.status = 2;
+      } else if (statusFilter === 'inactive') {
+        params.status = 3;
       }
 
       const res = await membersApi.getMembers(params);
@@ -97,8 +99,8 @@ const ReceptionistDashboard = () => {
     setPageNumber(1);
   };
 
-  const activeInPage = members.filter((m) => m.isActive).length;
-  const inactiveInPage = members.filter((m) => !m.isActive).length;
+  const activeInPage = members.filter((m) => m.status === 2).length;
+  const pendingInPage = members.filter((m) => m.status === 1).length;
   const recentSignups = members.filter(
     (m) => m.createdAt && new Date(m.createdAt) >= new Date(Date.now() - 7 * 86400000)
   ).length;
@@ -169,10 +171,10 @@ const ReceptionistDashboard = () => {
         <div className="p-4 flex items-center justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Inactive (This Page)
+              Pending (This Page)
             </p>
             <p className="text-2xl font-bold text-amber-600 tabular-nums mt-1">
-              {inactiveInPage}
+              {pendingInPage}
             </p>
           </div>
         </div>
@@ -197,6 +199,7 @@ const ReceptionistDashboard = () => {
           <div className="flex items-center gap-1 bg-slate-200/70 p-1 rounded-lg w-fit">
             {[
               { key: 'all', label: 'All Members' },
+              { key: 'pending', label: 'Pending' },
               { key: 'active', label: 'Active' },
               { key: 'inactive', label: 'Inactive' }
             ].map((tab) => (
@@ -318,17 +321,17 @@ const ReceptionistDashboard = () => {
                       {/* Details */}
                       <td className="py-3 px-4">
                         <div className="text-slate-800 font-medium">
-                          {[member.genderName, member.bloodGroupName].filter(Boolean).join(' · ') || '—'}
+                          {member.genderName || '—'}
                         </div>
                         <div className="text-[11px] text-slate-500 tabular-nums">
-                          DOB: {member.dateOfBirth || '—'}
+                          Joined: {member.joiningDate || '—'}
                         </div>
                       </td>
 
                       {/* Emergency Contact */}
                       <td className="py-3 px-4">
                         <div className="text-slate-800 font-medium">
-                          {member.emergencyContactName || '—'}
+                          {[member.emergencyContactName, member.emergencyContactRelation].filter(Boolean).join(' · ') || '—'}
                         </div>
                         <div className="text-[11px] text-slate-500 tabular-nums">
                           {member.emergencyContactPhone || '—'}
@@ -337,15 +340,20 @@ const ReceptionistDashboard = () => {
 
                       {/* Status */}
                       <td className="py-3 px-4">
-                        {member.isActive ? (
+                        {member.status === 2 ? (
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Active
                           </span>
+                        ) : member.status === 1 ? (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            Pending
+                          </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                            Inactive
+                            {member.statusName || 'Inactive'}
                           </span>
                         )}
                       </td>

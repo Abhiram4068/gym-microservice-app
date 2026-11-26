@@ -18,24 +18,32 @@ public class CreateMemberRequestValidator : AbstractValidator<CreateMemberReques
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
             .EmailAddress().WithMessage("Please enter a valid email address.")
-            .MaximumLength(255).WithMessage("Email must not exceed 255 characters.");
+            .MaximumLength(256).WithMessage("Email must not exceed 256 characters.");
 
         RuleFor(x => x.PhoneNumber)
             .NotEmpty().WithMessage("Phone number is required.")
-            .MaximumLength(30).WithMessage("Phone number must not exceed 30 characters.")
-            .Matches(@"^[0-9+() -]{7,25}$").WithMessage("Please enter a valid phone number.");
+            .MaximumLength(20).WithMessage("Phone number must not exceed 20 characters.")
+            .Matches(@"^[0-9+() -]{7,20}$").WithMessage("Please enter a valid phone number.");
+
+        RuleFor(x => x.ProfileImageUrl)
+            .MaximumLength(2048).WithMessage("Profile image URL must not exceed 2048 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.ProfileImageUrl));
 
         RuleFor(x => x.Address)
             .MaximumLength(500).WithMessage("Address must not exceed 500 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.Address));
 
         RuleFor(x => x.EmergencyContactName)
-            .MaximumLength(150).WithMessage("Emergency contact name must not exceed 150 characters.")
+            .MaximumLength(100).WithMessage("Emergency contact name must not exceed 100 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.EmergencyContactName));
 
         RuleFor(x => x.EmergencyContactPhone)
-            .MaximumLength(30).WithMessage("Emergency contact phone must not exceed 30 characters.")
-            .Matches(@"^[0-9+() -]{7,25}$").WithMessage("Please enter a valid emergency contact phone number.")
+            .MaximumLength(20).WithMessage("Emergency contact phone must not exceed 20 characters.")
+            .Matches(@"^[0-9+() -]{7,20}$").WithMessage("Please enter a valid emergency contact phone number.")
             .When(x => !string.IsNullOrWhiteSpace(x.EmergencyContactPhone));
+
+        RuleFor(x => x.EmergencyContactRelation)
+            .MaximumLength(50).WithMessage("Emergency contact relation must not exceed 50 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.EmergencyContactRelation));
     }
 }
